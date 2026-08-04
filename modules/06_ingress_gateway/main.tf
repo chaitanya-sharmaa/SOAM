@@ -56,6 +56,6 @@ resource "google_api_gateway_gateway" "dap_gateway" {
   provider   = google-beta
   gateway_id = "${var.environment}-dap-gateway"
   api_config = google_api_gateway_api_config.dap_api_cfg.id
-  location   = var.region
+  region     = var.region
   project    = var.project_id
 }

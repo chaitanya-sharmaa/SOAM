@@ -4,17 +4,10 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "environments/**"
-      - "modules/**"
-      - ".github/workflows/terraform.yml"
   pull_request:
     branches:
       - main
-    paths:
-      - "environments/**"
-      - "modules/**"
-      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -31,7 +24,7 @@ jobs:
   terraform-plan:
     name: "Terraform Plan & Validate"
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: "Checkout Source Code"
