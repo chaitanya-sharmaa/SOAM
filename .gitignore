@@ -1,33 +1,60 @@
-# Local .terraform directories
-**/.terraform/*
+# ==============================================================================
+# Terraform Ignore Rules
+# ==============================================================================
+# Local .terraform directories (plugins, providers, modules cache)
+**/.terraform/
+.terraform/
 
-# .tfstate files
+# Terraform state files (local state should never be committed)
 *.tfstate
 *.tfstate.*
-*.tfvars
-!*.tfvars.example
-!terraform.tfvars
+*.tfstate.backup
+**/.terraform.tfstate.lock.info
 
-# Crash log files
+# Terraform execution plan files
+*.tfplan
+*.plan
+
+# Sensitive variable files
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+# Ignore private secrets tfvars, keep example templates
+# terraform.tfvars is allowed if containing non-secret project configs
+# *.tfvars
+
+# Crash logs
 crash.log
 crash.*.log
+*.log
 
-# Exclude all .tfvars files, which might contain sensitive data
-*.tfvars.json
-
-# Ignore override files as they are usually used only locally
+# Override files (local developer overrides)
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Include override files you do wish to add to version control using negated pattern
-# !example_override.tf
-
 # CLI configuration files
 .terraformrc
 terraform.rc
 
-# OS metadata
+# ==============================================================================
+# OS Metadata & Cache
+# ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
+
+# ==============================================================================
+# Editor & IDE Directories
+# ==============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
