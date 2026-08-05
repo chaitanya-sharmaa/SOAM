@@ -1,0 +1,254 @@
+name: "GCP DAP Terragrunt Multi-Env CI/CD"
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+    paths:
+      - "gcp/**"
+      - ".github/workflows/terragrunt-gcp.yml"
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+    paths:
+      - "gcp/**"
+      - ".github/workflows/terragrunt-gcp.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target Environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      action:
+        description: "Terragrunt Action"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+  id-token: write      # Required for Workload Identity Federation (WIF) OIDC auth
+  pull-requests: write # Required to post plan output on PRs
+
+env:
+  TF_VERSION: "1.7.5"
+  TG_VERSION: "1.1.2"
+  WIF_PROVIDER: "${{ secrets.GCP_WIF_PROVIDER }}"
+  WIF_SERVICE_ACCOUNT: "${{ secrets.GCP_TF_SA_EMAIL }}"
+
+jobs:
+  # ==============================================================================
+  # 1. Determine Target Environment for Pull Request (Branch-Aware)
+  # ==============================================================================
+  determine-env:
+    name: "Identify Target Environment"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      target_env: ${{ steps.select_env.outputs.target_env }}
+    steps:
+      - name: "Map Target PR Branch to Environment"
+        id: select_env
+        run: |
+          if [ "${{ github.base_ref }}" = "develop" ]; then
+            echo "target_env=dev" >> $GITHUB_OUTPUT
+            echo "PR target branch is develop -> Planning for 'dev' environment"
+          elif [ "${{ github.base_ref }}" = "staging" ]; then
+            echo "target_env=staging" >> $GITHUB_OUTPUT
+            echo "PR target branch is staging -> Planning for 'staging' environment"
+          elif [ "${{ github.base_ref }}" = "main" ]; then
+            echo "target_env=prod" >> $GITHUB_OUTPUT
+            echo "PR target branch is main -> Planning for 'prod' environment"
+          else
+            echo "target_env=dev" >> $GITHUB_OUTPUT
+            echo "Fallback -> Planning for 'dev' environment"
+          fi
+
+  # ==============================================================================
+  # 2. Terragrunt Lint & Plan for the Specific Target Environment
+  # ==============================================================================
+  terragrunt-plan:
+    name: "Plan (${{ needs.determine-env.outputs.target_env }})"
+    runs-on: ubuntu-latest
+    needs: determine-env
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to GCP via Workload Identity Federation"
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+          token_format: "access_token"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt CLI"
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+
+      - name: "Validate Dependency DAG"
+        working-directory: "gcp/live/${{ needs.determine-env.outputs.target_env }}"
+        run: terragrunt dag graph
+
+      - name: "Terragrunt Plan All"
+        id: tg_plan
+        working-directory: "gcp/live/${{ needs.determine-env.outputs.target_env }}"
+        run: |
+          terragrunt run --all plan --non-interactive
+
+  # ==============================================================================
+  # 3. Continuous Deployment to Dev (on merge to develop)
+  # ==============================================================================
+  deploy-dev:
+    name: "Apply (dev)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment: dev
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to GCP via WIF"
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+          token_format: "access_token"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt CLI"
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+
+      - name: "Terragrunt Apply All (Dev)"
+        working-directory: "gcp/live/dev"
+        run: terragrunt run --all apply --non-interactive
+
+  # ==============================================================================
+  # 4. Continuous Deployment to Staging (on merge to staging)
+  # ==============================================================================
+  deploy-staging:
+    name: "Apply (staging)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    environment: staging
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to GCP via WIF"
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+          token_format: "access_token"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt CLI"
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+
+      - name: "Terragrunt Apply All (Staging)"
+        working-directory: "gcp/live/staging"
+        run: terragrunt run --all apply --non-interactive
+
+  # ==============================================================================
+  # 5. Continuous Deployment to Prod (on merge to main)
+  # ==============================================================================
+  deploy-prod:
+    name: "Apply (prod)"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: prod
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to GCP via WIF"
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+          token_format: "access_token"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt CLI"
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+
+      - name: "Terragrunt Apply All (Prod)"
+        working-directory: "gcp/live/prod"
+        run: terragrunt run --all apply --non-interactive
+
+  # ==============================================================================
+  # 6. Manual Workflow Dispatch Trigger
+  # ==============================================================================
+  manual-execution:
+    name: "Manual (${{ inputs.environment }} - ${{ inputs.action }})"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to GCP via WIF"
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+          token_format: "access_token"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: "Setup Terragrunt CLI"
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: ${{ env.TG_VERSION }}
+
+      - name: "Execute Terragrunt Action"
+        working-directory: "gcp/live/${{ inputs.environment }}"
+        run: |
+          terragrunt run --all ${{ inputs.action }} --non-interactive
