@@ -4,6 +4,8 @@
 
 The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-agent AI execution platform provisioned on **Google Cloud Platform (GCP)**. It decouples client ingestion, security guardrails, agent reasoning, tool execution, and observability into isolated, serverless microservices with zero public ingress and hardened network boundaries.
 
+The platform's core orchestration pattern is **SOAM (Service Oriented Agent Messaging)** — an async-first, event-driven architecture that enables robust, scalable, and auditable multi-agent task orchestration using Google Cloud Pub/Sub as the backbone message bus.
+
 ```text
                                       GOOGLE CLOUD DAP (Data & Agent Platform)
 +-------------------------------------------------------------------------------------------------------------------------+
@@ -18,10 +20,10 @@ The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-
 |  | - Cloud Monitoring |   |     - Agent Registry Service       |     - Agent 1  <==>  Agent 1 Inbound Topic (Pub/Sub) |  |
 |  |                    |   |     - Agent Registry (Cloud SQL)   |     - Agent 2  <==>  Agent 2 Inbound Topic (Pub/Sub) |  |
 |  |                    |   +------------------------------------+-----------------------------------------------------+  |
-|  |                    |   | [4] AGENT BACKBONE & ORCHESTRATION (05_compute_services & 04_messaging)                  |  |
+|  |                    |   | [4] SOAM: AGENT BACKBONE & ORCHESTRATION (05_compute_services & 04_messaging)             |  |
+|  |                    |   |     - Agent Gateway (SOAM Engine)  — async Pub/Sub dispatch + sync fallback               |  |
 |  |                    |   |     - GateKeeper & GateKeeper Topic (Pub/Sub)  ==> CTT BigQuery (Analytics/Tracing)      |  |
 |  |                    |   |     - MCP Gateway (Model Context Protocol)     ==> External Enterprise APIs              |  |
-|  |                    |   |     - Agent Gateway & Topic (Cloud SQL / SOAM) ==> Routes to Agents & API Gateway        |  |
 |  |                    |   |     - Grid Monitoring & Grid Lens (Observability & Dashboard UI)                         |  |
 |  +--------------------+   +------------------------------------------------------------------------------------------+  |
 +-------------------------------------------------------------------------------------------------------------------------+
@@ -40,7 +42,7 @@ The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-
 
 ## 2. GCP VPC Network Topology & Traffic Flows
 
-![GCP DAP VPC Network Topology](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_vpc_network_diagram.png)
+![GCP DAP Full VPC Network Topology & Connectivity Map](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_vpc_network_diagram.png)
 
 ### Key Network Boundaries:
 1. **Customer Custom VPC (`10.10.0.0/16`)**:
@@ -62,11 +64,11 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 
 1. 🔒 **Private Cloud SQL Access (Zero Public IP for DB)**:
    - Cloud SQL instances live inside Google's managed *Service Producer Tenant VPC*.
-   - Cloud Run cannot peer directly with Google's Tenant VPC. Instead, Cloud Run connects to the **Customer VPC** via a **Serverless VPC Access Connector**, which then transits across the **Private Services Access (PSA)** peering connection into the Tenant VPC (`10.10.16.x`). This guarantees that your relational database is never exposed to the public internet.
+   - Cloud Run cannot peer directly with Google's Tenant VPC. Instead, Cloud Run connects to the **Customer VPC** via **Direct VPC Egress**, which then transits across the **Private Services Access (PSA)** peering connection into the Tenant VPC (`10.10.16.x`). This guarantees that your relational database is never exposed to the public internet.
 
 2. 🛡️ **Predictable Static Public IP for Outbound Tool Egress (Cloud NAT)**:
    - When AI Agents or the MCP Gateway invoke external enterprise APIs, SaaS tools, or partner systems, those third-party firewalls require **IP Allowlisting**.
-   - Default serverless Cloud Run egress uses dynamic, rotating Google public IP pools that cannot be allowlisted. By routing outbound traffic through the Customer VPC with **Cloud NAT**, all egress traffic exits via a single, dedicated **Static Elastic Public IP** (`34.x.x.x`).
+   - Default serverless Cloud Run egress uses dynamic, rotating Google public IP pools that cannot be allowlisted. By routing outbound traffic through the Customer VPC with **Cloud NAT** (`MANUAL_ONLY` static IP), all egress traffic exits via a single, dedicated **Static Elastic Public IP** (`34.x.x.x`).
 
 3. ⚡ **Private Google Access (PGA) Routing**:
    - The Customer VPC subnet enforces DNS resolution for `*.googleapis.com` to Google's Private VIPs (`199.36.153.8/30`), ensuring that all telemetry to BigQuery and state to Firestore stays strictly on Google's private software-defined network.
@@ -92,11 +94,11 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
                                                 │
                                                 ├──(Hop 3: East-West Internal API Call)──► [gatekeeper] ──► [guardrails]
                                                 │
-                                                ├──(Hop 4: Serverless VPC Connector)──► [Customer VPC 10.10.0.0/16]
+                                                ├──(Hop 4: Direct VPC Egress)──► [snet-private-workload 10.10.1.0/24]
                                                 │                                            │
                                                 │                                            ├──(Hop 5: PSA Peering)──► [Cloud SQL PostgreSQL]
                                                 │                                            │
-                                                │                                            └──(Hop 6: Cloud NAT)──► [External MCP Tool APIs]
+                                                │                                            └──(Hop 6: Cloud NAT Static IP)──► [External MCP Tool APIs]
                                                 │
                                                 └──(Hop 7: Private Google Access / PGA)──► [BigQuery / Firestore / PubSub / KMS]
 ```
@@ -117,18 +119,18 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 * **What happens**: The `agent-gateway` routes tasks to `gatekeeper`, which calls `guardrails` for prompt safety analysis.
 * **Security Boundary**: All internal Cloud Run microservices are configured with `ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"`. Direct public access from the internet is blocked; only authorized calls carrying Google IAM tokens are permitted.
 
-#### 📍 Hop 4: Serverless-to-VPC Transition (Cloud Run ➔ VPC Access Connector)
-* **What happens**: When microservices need to reach a private IP (`10.10.16.x`), Cloud Run evaluates its `vpc_access` policy (`egress = "PRIVATE_RANGES_ONLY"`).
-* **The Bridge**: Cloud Run injects TCP packets into the dedicated **Serverless VPC Access Connector** instances in `snet-vpc-connector` (`10.10.2.0/28`), placing packets directly inside your Customer VPC.
+#### 📍 Hop 4: Direct VPC Egress (Cloud Run ➔ snet-private-workload)
+* **What happens**: When microservices need to reach a private IP (`10.10.16.x`), Cloud Run uses **Direct VPC Egress** — each instance is assigned an IP directly from `snet-private-workload` (`10.10.1.0/24`).
+* **No Proxy VMs**: Unlike the legacy VPC Access Connector (e2-micro VM fleet), Direct VPC Egress places packets directly inside the Customer VPC with zero intermediate proxy hops, eliminating the ~2ms connector overhead and the bottleneck failure domain.
 
 #### 📍 Hop 5: VPC to Cloud SQL (Customer VPC ➔ PSA Peering ➔ Cloud SQL)
-* **What happens**: Packets for PostgreSQL port `5432` leave the VPC Connector subnet and target the private IP of the database (`10.10.16.x`).
+* **What happens**: Packets for PostgreSQL port `5432` leave the VPC Egress subnet and target the private IP of the database (`10.10.16.x`).
 * **VPC Peering Transit**: Traffic traverses the **Private Services Access (PSA)** peering connection (`servicenetworking.googleapis.com`) into Google's Service Producer Tenant VPC.
 * **Zero Public Exposure**: Cloud SQL has `ipv4_enabled = false` and cannot be reached from the internet.
 
 #### 📍 Hop 6: Outbound Tool Egress (Cloud Run ➔ VPC ➔ Cloud NAT ➔ External APIs)
-* **What happens**: When `agent-1` or `mcp-gateway` executes an external tool against third-party enterprise REST APIs or LLMs, the egress packet routes through the VPC Connector into the VPC.
-* **NAT Translation**: The VPC's default route directs the packet through **Cloud Router** and **Cloud NAT**.
+* **What happens**: When `agent-1` or `mcp-gateway` executes an external tool against third-party enterprise REST APIs or LLMs, the egress packet routes through the VPC Egress subnet into the VPC.
+* **NAT Translation**: The VPC's default route directs the packet through **Cloud Router** and **Cloud NAT** (`nat_ip_allocate_option = "MANUAL_ONLY"`).
 * **Static Egress**: Cloud NAT translates the private IP into a single, predictable **Static Public IP**, allowing enterprise firewalls to whitelist DAP egress traffic.
 
 #### 📍 Hop 7: Private Google Access (Workload ➔ BigQuery / Firestore / KMS / Pub/Sub)
@@ -138,17 +140,157 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 
 ---
 
-## 4. Architecture Mapping to Terraform / Terragrunt Modules
+## 4. SOAM — Service Oriented Agent Messaging
+
+![SOAM Architecture](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/soam_architecture_diagram.png)
+
+SOAM (**Service Oriented Agent Messaging**) is the core architectural pattern governing how the Digital Agent Platform (DAP) dispatches, validates, routes, and executes AI agent tasks at scale. It is the operational backbone of the `agent-gateway` service and the `04_messaging` Pub/Sub topology.
+
+---
+
+### 4.1 SOAM Core Principles
+
+| Principle | Description | DAP Implementation |
+| :--- | :--- | :--- |
+| **Async-First Dispatch** | All complex agent tasks are dispatched asynchronously via durable message queues — no blocking HTTP calls between orchestrator and agent workers | Pub/Sub push subscriptions (`agent-1-inbound`, `agent-2-inbound`) with OIDC-authenticated Cloud Run push endpoints |
+| **Sync Fallback for Lightweight Queries** | Simple, low-latency lookups bypass the full async pipeline and return synchronous HTTP responses | Agent Gateway evaluates request complexity and returns inline for registry lookups, health checks, and routing decisions |
+| **Event-Driven Decoupling** | The Agent Gateway is the **only** service that knows about the downstream agent topology. Agents do not know about each other. | Agent Gateway publishes to topics; agents subscribe and process independently |
+| **Mandatory Safety Gate** | Every task transiting the SOAM bus must pass through `GateKeeper` before reaching any agent | GateKeeper Topic → GateKeeper Service → Guardrails → Agent Inbound Topic (only after `PASS`) |
+| **Idempotent Task Delivery** | Tasks can be safely re-delivered without producing duplicate side effects | `ack_deadline_seconds = 300`, `dead_letter_policy.max_delivery_attempts = 5`, `retry_policy.minimum_backoff = "10s"` |
+| **Full Audit Traceability** | Every task ingested, dispatched, validated, and processed generates a structured trace event | GateKeeper writes `audit_security_logs` to BigQuery CTT; agents write `agent_telemetry_traces` |
+| **Multi-Agent Collaboration** | Agents can spawn sub-tasks and delegate them to peer agents via the same SOAM bus | Agent 1 publishes a subtask to `agent-2-inbound-topic` via Agent Gateway; Agent 2 processes it independently |
+
+---
+
+### 4.2 SOAM Message Lifecycle
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                          SOAM TASK LIFECYCLE                                         │
+│                                                                                      │
+│  [Client Request]                                                                    │
+│        │                                                                             │
+│        ▼                                                                             │
+│  ┌─────────────────────────────────────────────┐                                    │
+│  │  Agent Gateway (SOAM Engine)                │                                    │
+│  │                                             │                                    │
+│  │  1. Parse & classify incoming request       │                                    │
+│  │  2. Enrich with session context (Cloud SQL) │                                    │
+│  │  3a. Lightweight? ──► Sync HTTP response    │                                    │
+│  │  3b. Complex task? ──► Publish to Pub/Sub   │                                    │
+│  └──────────────────────┬──────────────────────┘                                    │
+│                         │ PUBLISH                                                    │
+│                         ▼ (CMEK-encrypted message)                                  │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐   │
+│  │  SOAM Message Bus — Pub/Sub (04_messaging)                                   │   │
+│  │                                                                              │   │
+│  │  [gatekeeper-topic] ──PUSH──► [GateKeeper Service]                          │   │
+│  │                                       │                                      │   │
+│  │                              ┌────────┴────────┐                             │   │
+│  │                         PASS │                 │ BLOCK                       │   │
+│  │                              ▼                 ▼                             │   │
+│  │              [agent-1-inbound-topic]   [audit_security_logs]                 │   │
+│  │              [agent-2-inbound-topic]   (BigQuery CTT)                        │   │
+│  │                                                                              │   │
+│  │  DLQ: max 5 retries → [dap-dlq-topic] (7-day retention for forensics)       │   │
+│  └─────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                │ PUSH (OIDC token, 300s ack deadline)               │
+│                                ▼                                                    │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│  │  Agent Workspace (05_compute_services)                                       │   │
+│  │                                                                              │   │
+│  │  Agent 1 / Agent 2 (Cloud Run, min 1 instance)                               │   │
+│  │    │                                                                         │   │
+│  │    ├─ Load context ──────────────────────────────► Firestore (PGA)           │   │
+│  │    ├─ Resolve agent ────────────────────────────► Agent Registry (PSA/SQL)   │   │
+│  │    ├─ Execute tool ──► MCP Gateway ──► Cloud NAT ─► External APIs            │   │
+│  │    ├─ Delegate task ──► Agent Gateway ──► Agent 2 (SOAM multi-agent)        │   │
+│  │    └─ Stream telemetry ─────────────────────────► BigQuery CTT (PGA)         │   │
+│  └─────────────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 4.3 SOAM Services & Their Roles
+
+| Service | SOAM Role | Cloud Run Ingress | VPC Access | State Store |
+| :--- | :--- | :--- | :--- | :--- |
+| **Agent Gateway** | **SOAM Engine** — entry point, task classifier, Pub/Sub publisher, multi-agent coordinator | `INTERNAL_ONLY` | Direct VPC Egress | Cloud SQL (`agent_gateway` DB) |
+| **GateKeeper** | **SOAM Safety Gate** — intercepts every message on the bus, runs prompt safety & scope checks | `INTERNAL_ONLY` | Direct VPC Egress | BigQuery CTT (audit log write) |
+| **Guardrails** | **SOAM Policy Engine** — content policy evaluation, called synchronously by GateKeeper | `INTERNAL_ONLY` | None (PGA only) | None |
+| **Agent 1 / Agent 2** | **SOAM Worker Agents** — pull tasks from inbound topics, execute LLM reasoning loops | `INTERNAL_ONLY` | Direct VPC Egress | Firestore (state) + Cloud SQL (registry) |
+| **Agent Registry** | **SOAM Service Discovery** — maps agent IDs to capabilities and Cloud Run URLs | `INTERNAL_ONLY` | Direct VPC Egress | Cloud SQL (`agent_registry` DB) |
+| **MCP Gateway** | **SOAM Tool Executor** — model context protocol proxy to external enterprise APIs | `INTERNAL_ONLY` | Direct VPC Egress + Cloud NAT | Secret Manager (API credentials) |
+| **Grid Monitoring** | **SOAM Telemetry Sink** — aggregates step-level traces and token usage | `INTERNAL_ONLY` | None (PGA only) | BigQuery CTT |
+| **Grid Lens** | **SOAM Observability UI** — admin dashboard for live request flows and agent health | `INTERNAL_LOAD_BALANCER` | None | BigQuery CTT (read) |
+
+---
+
+### 4.4 SOAM Pub/Sub Topic Topology
+
+```text
+   ┌─────────────────────────────────────────────────────────────┐
+   │            SOAM Message Bus (CMEK Encrypted Pub/Sub)        │
+   │                                                             │
+   │  [gatekeeper-topic]          → GateKeeper Push Sub          │
+   │  [agent-1-inbound-topic]     → Agent 1 Push Sub             │
+   │  [agent-2-inbound-topic]     → Agent 2 Push Sub             │
+   │  [agent-gateway-topic]       → Agent Gateway Pull Sub        │
+   │                                                             │
+   │  [dap-dlq-topic]             ← All subscriptions (DLQ)      │
+   │    (7-day retention, CMEK)                                   │
+   └─────────────────────────────────────────────────────────────┘
+
+   Per-Subscription Reliability Config:
+   ├── ack_deadline_seconds    = 300 (5 min for LLM reasoning)
+   ├── max_delivery_attempts   = 5
+   ├── minimum_backoff         = 10s
+   └── maximum_backoff         = 600s
+```
+
+---
+
+### 4.5 SOAM Multi-Agent Collaboration Flow
+
+When Agent 1's reasoning determines a task requires a different specialist (Agent 2):
+
+```text
+Agent 1 (Reasoning Loop)
+  │
+  ├── 1. Resolves Agent 2's capabilities via Agent Registry (Cloud SQL)
+  │
+  ├── 2. Publishes a sub-task message to Agent Gateway
+  │         {
+  │           "target_agent": "agent-2",
+  │           "parent_trace_id": "trace-xyz",
+  │           "task_payload": { ... }
+  │         }
+  │
+  └── 3. Agent Gateway validates + publishes to [agent-2-inbound-topic]
+              │
+              ▼
+         Agent 2 processes sub-task independently
+              │
+              └── Results written to shared Firestore session context
+                  (keyed by parent_trace_id for Agent 1 to read on next loop)
+```
+
+This pattern enables **horizontal multi-agent collaboration** without direct point-to-point coupling — agents communicate exclusively through the SOAM bus.
+
+---
+
+## 5. Architecture Mapping to Terraform / Terragrunt Modules
 
 The codebase is partitioned into 7 modular building blocks:
 
 ```mermaid
 flowchart TD
-    M1["01_networking\n• VPC & Subnets\n• Serverless VPC Connector\n• PSA Peering\n• Cloud NAT & Router\n• Cloud Armor WAF Policy"]
+    M1["01_networking\n• VPC & Subnets (Direct VPC Egress)\n• PSA Peering for Cloud SQL\n• Cloud NAT (Static IP MANUAL_ONLY)\n• Cloud Armor WAF Policy"]
     M2["02_security_iam\n• Service Accounts & IAM Roles\n• Cloud KMS CMEK Keys\n• Secret Manager Secrets"]
     M3["03_data_state\n• Cloud SQL PostgreSQL 15\n• Firestore Native Database\n• BigQuery CTT Dataset"]
-    M4["04_messaging\n• Pub/Sub Inbound Topics\n• Dead-Letter Queues (DLQ)\n• Push Subscriptions"]
-    M5["05_compute_services\n• Cloud Run v2 Microservices\n• Agent 1 & Agent 2\n• GateKeeper & Guardrails\n• MCP Gateway\n• Grid Monitoring & Lens"]
+    M4["04_messaging\n• SOAM Pub/Sub Topics\n• Dead-Letter Queues (DLQ)\n• CMEK-Encrypted Push Subscriptions"]
+    M5["05_compute_services\n• Cloud Run v2 (Direct VPC Egress)\n• SOAM Engine (Agent Gateway)\n• Agent 1 & Agent 2 Workers\n• GateKeeper & Guardrails\n• MCP Gateway"]
     M6["06_ingress_gateway\n• Google Cloud API Gateway\n• PingIdentity JWT OpenAPI Config"]
     M7["07_observability\n• 365-day Immutable Audit Log Bucket\n• Cloud Logging Sinks\n• Monitoring Alerts & Dashboards"]
 
@@ -167,17 +309,17 @@ flowchart TD
 
 | Module | Code Location | Resources Provisioned | Security Controls |
 | :--- | :--- | :--- | :--- |
-| **01_networking** | `modules/01_networking/` | VPC, Subnets, VPC Access Connector, PSA Peering, Cloud Router, Cloud NAT, Cloud Armor | Edge DDoS/WAF protection, private RFC 1918 addressing |
+| **01_networking** | `modules/01_networking/` | VPC, Private Subnet (Direct VPC Egress), PSA Peering, Cloud Router, Cloud NAT (static MANUAL_ONLY IP), Cloud Armor | Edge DDoS/WAF protection, no connector VMs, private RFC 1918 addressing |
 | **02_security_iam** | `modules/02_security_iam/` | Dedicated SAs (`sa-agent-1`, `sa-gatekeeper`, etc.), Cloud KMS Keyrings/Keys, Secret Manager | Least-privilege IAM, envelope encryption with CMEK |
-| **03_data_state** | `modules/03_data_state/` | Private Cloud SQL (Postgres 15), Firestore Native, BigQuery CTT Telemetry Dataset | Private IP only, KMS disk encryption, PGA transit |
-| **04_messaging** | `modules/04_messaging/` | Pub/Sub Topics (`agent-1-inbound`, `gatekeeper-inbound`), Dead Letter Queues, IAM Push Subs | Message acknowledgement deadlines, DLQ retry policies |
-| **05_compute_services** | `modules/05_compute_services/` | Cloud Run v2 services (`agent-1`, `agent-2`, `agent-gateway`, `gatekeeper`, `mcp-gateway`, `guardrails`, `grid-monitoring`, `grid-lens`) | `INGRESS_TRAFFIC_INTERNAL_ONLY`, VPC connector attachment |
+| **03_data_state** | `modules/03_data_state/` | Private Cloud SQL (Postgres 15 × 2: Registry + SOAM Gateway DB), Firestore Native, BigQuery CTT Telemetry Dataset | Private IP only, KMS disk encryption, PGA transit |
+| **04_messaging** | `modules/04_messaging/` | SOAM Pub/Sub Topics (`agent-1-inbound`, `agent-2-inbound`, `gatekeeper-topic`, `agent-gateway-topic`), DLQ, CMEK Push Subs | OIDC auth, 5-retry DLQ, 10s-600s backoff |
+| **05_compute_services** | `modules/05_compute_services/` | Cloud Run v2 services (9 microservices, Direct VPC Egress, `INGRESS_TRAFFIC_INTERNAL_ONLY`, `min_instance_count ≥ 1`) | SOAM role separation, OIDC Pub/Sub push auth |
 | **06_ingress_gateway** | `modules/06_ingress_gateway/` | Google Cloud API Gateway, API Config, OpenAPI Specs with PingIdentity JWT security definitions | OAuth2/OIDC JWT validation, rate limiting |
 | **07_observability** | `modules/07_observability/` | Cloud Storage Audit Bucket (365-day retention, Object Lock), Cloud Logging Sink, Alert Policies | Immutable compliance audit trails, operational metrics |
 
 ---
 
-## 5. End-to-End Execution Flow (Interview Talking Points)
+## 6. End-to-End Execution Flow
 
 ```text
 [Client Request]
@@ -189,44 +331,53 @@ flowchart TD
 2. API Gateway (Validates PingIdentity JWT Token)
        │
        ▼
-3. Agent Gateway (Cloud Run)
+3. Agent Gateway — SOAM Engine (Cloud Run)
        │
-       ├──► Publishes to GateKeeper Topic (Pub/Sub)
-       │         │
-       │         ▼
-       │    4. GateKeeper (Cloud Run)
-       │         │
-       │         ├──► Validates Safety with Guardrails
-       │         ▼
-       │    5. Pushes to Agent Inbound Topic (Pub/Sub)
+       ├── Lightweight query? ──► Sync response (no Pub/Sub)
        │
-       ▼
-6. Agent 1 (Cloud Run Reasoning Engine)
-       │
-       ├──► Loads conversation memory from Firestore (via PGA)
-       ├──► Queries Agent Registry DB (Cloud SQL via PSA Peering)
-       ├──► Executes external tool via MCP Gateway (via Cloud NAT)
-       └──► Streams token telemetry to BigQuery (via PGA)
-       │
-       ▼
-7. Response routed back to Client via Agent Gateway & API Gateway
+       └── Complex task? ──► Publish to [gatekeeper-topic]
+                                   │
+                                   ▼
+                        4. GateKeeper + Guardrails (Safety Validation)
+                                   │
+                              PASS │        BLOCK ──► audit_security_logs (BigQuery)
+                                   ▼
+                        Publish to [agent-1-inbound-topic]
+                                   │
+                                   ▼
+                        5. Agent 1 (Cloud Run Reasoning Worker)
+                                   │
+                                   ├──► Loads context from Firestore (PGA)
+                                   ├──► Queries Agent Registry DB (PSA/Cloud SQL)
+                                   ├──► Tool call via MCP Gateway → Cloud NAT → External APIs
+                                   ├──► Multi-agent delegation → Agent 2 (via SOAM bus)
+                                   └──► Streams telemetry → BigQuery CTT (PGA)
+                                   │
+                                   ▼
+                        6. Response via Agent Gateway & API Gateway → Client
 ```
+
+### Execution Steps in Detail:
 
 1. **Request Ingestion**:
    * A client sends a request to the **API Gateway** through **Cloud Armor WAF**.
-   * The API Gateway verifies the JWT against **PingIdentity's JWKS** endpoint and routes the request to **Agent Gateway**.
+   * The API Gateway verifies the JWT against **PingIdentity's JWKS** endpoint and routes the request to **Agent Gateway** (SOAM Engine).
 
-2. **Security Inspection**:
-   * The **Agent Gateway** publishes the task to **GateKeeper Topic**.
-   * **GateKeeper** validates payload safety with **Guardrails** and pushes clean tasks to the **Agent Inbound Topic**.
+2. **SOAM Dispatch Decision**:
+   * The **Agent Gateway** classifies the request. Lightweight queries (health, registry lookups) return synchronously.
+   * Complex AI tasks are published to the **GateKeeper Pub/Sub Topic** (SOAM async path).
 
-3. **Agent Reasoning & Execution**:
-   * **Agent 1** pulls the message, loads conversation context from **Firestore**, and prompts the **LLM API (Vertex AI)**.
+3. **SOAM Safety Gate**:
+   * **GateKeeper** validates payload safety with **Guardrails** (prompt injection, scope, content policy).
+   * Blocked requests are logged to `audit_security_logs` in BigQuery CTT. Passed requests are forwarded to the appropriate **Agent Inbound Topic**.
+
+4. **Agent Reasoning & Execution**:
+   * **Agent 1** pulls the task, loads conversation context from **Firestore**, and calls the LLM (Vertex AI via PGA).
    * If a tool is required, Agent 1 calls **MCP Gateway**, which executes the tool against the **External API** using credentials from **Secret Manager**.
 
-4. **Multi-Agent Collaboration**:
-   * Agent 1 queries the **Agent Registry** to resolve **Agent 2**, and delegates subtasks via the Agent Gateway.
+5. **Multi-Agent Collaboration**:
+   * Agent 1 queries the **Agent Registry** to resolve **Agent 2**, and delegates subtasks back through the **SOAM bus** (Agent Gateway → `agent-2-inbound-topic`).
 
-5. **Telemetry & Audit**:
-   * Step latency and token consumption are pushed to **Grid Monitoring** and archived in **CTT BigQuery**.
+6. **Telemetry & Audit**:
+   * Step latency and token consumption are pushed to **Grid Monitoring** and archived in **CTT BigQuery** (`agent_telemetry_traces` table).
    * Admins inspect live telemetry and request flows in **Grid Lens**.
