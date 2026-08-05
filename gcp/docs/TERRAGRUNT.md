@@ -6,7 +6,7 @@ This document provides a comprehensive technical guide to how **Terragrunt** orc
 
 ## 🎨 Multi-Environment Architecture & CI/CD Diagram
 
-![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 

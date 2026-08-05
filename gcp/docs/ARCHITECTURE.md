@@ -42,7 +42,7 @@ The platform's core orchestration pattern is **SOAM (Service Oriented Agent Mess
 
 ## 2. GCP VPC Network Topology & Traffic Flows
 
-![GCP DAP Full VPC Network Topology & Connectivity Map](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_vpc_network_diagram.png)
+![GCP DAP Full VPC Network Topology & Connectivity Map](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_vpc_network_diagram.png)
 
 ### Key Network Boundaries:
 1. **Customer Custom VPC (`10.10.0.0/16`)**:
@@ -81,7 +81,7 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 
 ## 3. Hop-by-Hop Packet & Connection Lifecycle
 
-![GCP Hop-by-Hop Packet Journey](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_hop_by_hop_diagram.png)
+![GCP Hop-by-Hop Packet Journey](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_hop_by_hop_diagram.png)
 
 ```text
 [Client] 
@@ -142,7 +142,7 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 
 ## 4. SOAM — Service Oriented Agent Messaging
 
-![SOAM Architecture](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/soam_architecture_diagram.png)
+![SOAM Architecture](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/soam_architecture_diagram.png)
 
 SOAM (**Service Oriented Agent Messaging**) is the core architectural pattern governing how the Digital Agent Platform (DAP) dispatches, validates, routes, and executes AI agent tasks at scale. It is the operational backbone of the `agent-gateway` service and the `04_messaging` Pub/Sub topology.
 

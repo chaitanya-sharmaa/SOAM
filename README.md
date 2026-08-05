@@ -1,12 +1,43 @@
-# Google Cloud Platform (GCP) Digital Agent Platform (DAP) Infrastructure
+# Digital Agent Platform (DAP) — GCP Infrastructure
 
-Production-grade, enterprise Infrastructure-as-Code (IaC) repository orchestrating the **Digital Agent Platform (DAP)** on **Google Cloud Platform (GCP)** using **Terraform modules**, **Terragrunt multi-environment live state**, and **GitHub Actions Keyless CI/CD (Workload Identity Federation)**.
+> Production-grade, enterprise multi-agent AI platform on **Google Cloud Platform** using **Terraform**, **Terragrunt**, and **GitHub Actions (WIF Keyless CI/CD)**.
 
 ---
 
-## 🎨 Platform Architecture & CI/CD Orchestration
+## 🏗️ Platform Architecture
 
-![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+### VPC Network Topology & Connectivity
+
+![GCP DAP — VPC Network Topology & Connectivity](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_vpc_network_diagram.png)
+
+### SOAM — Service Oriented Agent Messaging
+
+![SOAM — Service Oriented Agent Messaging](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/soam_architecture_diagram.png)
+
+### Hop-by-Hop Packet & Connection Lifecycle
+
+![GCP DAP — Hop-by-Hop Packet Lifecycle](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_hop_by_hop_diagram.png)
+
+### Terragrunt Multi-Environment IaC & GitOps CI/CD
+
+![GCP DAP — Terragrunt CI/CD Pipeline](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+
+---
+
+## ⚡ Key Architectural Highlights
+
+| Area | Design Decision | Benefit |
+| :--- | :--- | :--- |
+| **SOAM Orchestration** | Async Pub/Sub dispatch + sync fallback via Agent Gateway | Decoupled, fault-tolerant multi-agent task routing |
+| **Zero Trust Ingress** | All Cloud Run: `INGRESS_TRAFFIC_INTERNAL_ONLY` | No direct public exposure to any microservice |
+| **Direct VPC Egress** | `network_interfaces` block — Cloud Run IPs from `snet-private-workload` | Eliminates e2-micro connector VMs, removes ~2ms latency per hop |
+| **Static NAT Egress** | Cloud NAT `MANUAL_ONLY` with reserved static IP | Deterministic allowlistable IP for enterprise firewall rules |
+| **Private DB Access** | Cloud SQL `ipv4_enabled = false` via PSA Peering | Database never reachable from public internet |
+| **PGA Zero NAT** | `private_ip_google_access = true` on subnet | BigQuery, Firestore, Pub/Sub, KMS all via Google internal SDN |
+| **CMEK Everywhere** | KMS keys for SQL, Pub/Sub, BigQuery, GCS, Secrets | Customer-controlled encryption across all data stores |
+| **Keyless CI/CD** | GitHub Actions WIF — no long-lived service account keys | Zero key management risk in CI/CD pipeline |
+| **Idempotent Messaging** | Pub/Sub: 300s ACK, 5-retry DLQ, 10s–600s backoff | No silent task loss — failed tasks go to forensic DLQ |
+| **Multi-Agent Collaboration** | Agents delegate sub-tasks back through SOAM bus | Horizontal scale without point-to-point coupling |
 
 ---
 
@@ -16,105 +47,111 @@ Production-grade, enterprise Infrastructure-as-Code (IaC) repository orchestrati
 cloud-run/
 ├── .github/
 │   └── workflows/
-│       └── terragrunt-gcp.yml       # Branch-aware multi-env CI/CD Pipeline (WIF Keyless Auth)
+│       └── terragrunt-gcp.yml        # GitOps CI/CD: WIF auth, plan/apply/destroy per env
 │
-├── gcp/                             # 🌐 Google Cloud Platform Implementation
-│   ├── bootstrap/                   # One-time bootstrap for GCP WIF & Remote State Bucket
+├── gcp/
+│   ├── bootstrap/                    # One-time: WIF setup & GCS remote state bucket
 │   │
-│   ├── live/                        # ⚡ Terragrunt Multi-Environment Deployments
-│   │   ├── root.hcl                 # 🌐 Global Root: Auto GCS Remote State & Provider generation
+│   ├── live/                         # Terragrunt live environments
+│   │   ├── root.hcl                  # Global: GCS remote state, provider, WIF
 │   │   │
-│   │   ├── dev/                     # 🧪 Development Environment (my-dap-gcp-dev)
-│   │   │   ├── env.hcl              # CIDR: 10.10.1.0/24, DB: 2 vCPU, :latest tags
-│   │   │   ├── 01_networking/
-│   │   │   ├── 02_security_iam/
-│   │   │   ├── 03_data_state/
-│   │   │   ├── 04_messaging/
-│   │   │   ├── 05_compute_services/
-│   │   │   ├── 06_ingress_gateway/
-│   │   │   └── 07_observability/
-│   │   │
-│   │   ├── staging/                 # 🚀 Staging Environment (my-dap-gcp-staging)
-│   │   │   ├── env.hcl              # CIDR: 10.20.1.0/24, DB: 4 vCPU, :staging tags
-│   │   │   └── ... (01 through 07)
-│   │   │
-│   │   └── prod/                    # 🛡️ Production Environment (my-dap-gcp-prod)
-│   │       ├── env.hcl              # CIDR: 10.30.1.0/24, DB: 8 vCPU (HA), :v1.0.0 tags
-│   │       └── ... (01 through 07)
+│   │   ├── dev/                      # 🧪 Dev  — project: my-dap-dev    | subnet: 10.10.1.0/24
+│   │   ├── staging/                  # 🚀 Staging — project: my-dap-staging | subnet: 10.20.1.0/24
+│   │   └── prod/                     # 🛡️  Prod  — project: my-dap-prod  | subnet: 10.30.1.0/22 (HA)
+│   │       └── [01..07]/terragrunt.hcl
 │   │
-│   ├── modules/                     # 📦 Reusable Terraform Modules (Source of Truth)
-│   │   ├── 01_networking/           # VPC, Subnets, PSA Peering, VPC Connector, Cloud Armor WAF
-│   │   ├── 02_security_iam/         # Service Accounts, IAM Roles, Cloud KMS (CMEK), Secret Manager
-│   │   ├── 03_data_state/           # Private Cloud SQL (PostgreSQL 15), Firestore Native, BigQuery CTT
-│   │   ├── 04_messaging/            # Pub/Sub Inbound Topics & Push Subscriptions with DLQ
-│   │   ├── 05_compute_services/     # Cloud Run v2 (Agents 1/2, Gateway, GateKeeper, MCP Gateway, Lens)
-│   │   ├── 06_ingress_gateway/      # Google Cloud API Gateway & PingIdentity JWT Auth Specs
-│   │   └── 07_observability/        # Immutable Audit Log Bucket, Sinks, Dashboards & Alerts
+│   ├── modules/                      # Reusable Terraform modules (source of truth)
+│   │   ├── 01_networking/            # VPC, snet-private-workload, PSA, Cloud NAT (static IP), Cloud Armor
+│   │   ├── 02_security_iam/          # Service Accounts, IAM roles, Cloud KMS CMEK, Secret Manager
+│   │   ├── 03_data_state/            # Cloud SQL ×2 (Registry + SOAM), Firestore, BigQuery CTT
+│   │   ├── 04_messaging/             # SOAM Pub/Sub topics, DLQ (7-day), push subscriptions
+│   │   ├── 05_compute_services/      # Cloud Run v2 (9 services), Direct VPC Egress, min_instance_count ≥ 1
+│   │   ├── 06_ingress_gateway/       # Cloud API Gateway + PingIdentity JWT OpenAPI spec
+│   │   └── 07_observability/         # 365-day immutable audit log bucket, Logging sinks, Alerts
 │   │
 │   └── docs/
-│       ├── ARCHITECTURE.md          # Network boundaries, packet lifecycles & data flow diagrams
-│       ├── TERRAGRUNT.md            # In-depth Terragrunt guide, DAG dependency graph & CLI cheat sheet
-│       └── RUNBOOK.md               # Step-by-step deployment and operational runbook
+│       ├── ARCHITECTURE.md           # Full architecture: SOAM, VPC, hops, module map
+│       ├── TERRAGRUNT.md             # Terragrunt guide, DAG, CLI cheat sheet
+│       ├── RUNBOOK.md                # Step-by-step deployment & operational runbook
+│       ├── gcp_vpc_network_diagram.png
+│       ├── soam_architecture_diagram.png
+│       ├── gcp_hop_by_hop_diagram.png
+│       └── terragrunt_multienv_cicd_diagram.png
 │
-├── .gitignore
 └── README.md
 ```
 
 ---
 
-## ⚡ Key Architectural Highlights
+## 🤖 SOAM — Service Oriented Agent Messaging
 
-* **Multi-Agent Compute**: Microservices on Cloud Run v2 with Zero Public Ingress (`INGRESS_TRAFFIC_INTERNAL_ONLY`) communicating securely over Google internal service meshes.
-* **Edge Ingress**: Google Cloud API Gateway with Cloud Armor WAF and PingIdentity JWT authentication.
-* **Network Isolation**: Custom VPC with Serverless VPC Access Connector and Private Services Access (PSA) Peering.
-* **Enterprise State & Data**: Private Cloud SQL (PostgreSQL 15), Firestore Native Mode, and BigQuery Continuous Telemetry & Tracing (CTT) analytics via Private Google Access (PGA).
-* **Keyless Security**: Cloud KMS Customer-Managed Encryption Keys (CMEK), per-service least-privilege IAM, and GitHub Actions Workload Identity Federation (WIF).
-* **DRY Multi-Environment Orchestration**: **Terragrunt** eliminates boilerplate and orchestrates `dev`, `staging`, and `prod` with isolated state and automated dependency resolution (DAG).
+SOAM is the core orchestration pattern of this platform — an **async-first, event-driven** architecture that enables scalable and auditable multi-agent task routing.
 
----
-
-## 💻 Quick Start with Terragrunt
-
-### 1. View Dependency Graph
-```bash
-cd gcp/live/dev
-terragrunt dag graph
-```
-
-### 2. Plan and Deploy Dev
-```bash
-cd gcp/live/dev
-
-# Topological plan across all 7 units
-terragrunt run --all plan
-
-# Deploy the entire environment
-terragrunt run --all apply
-```
-
-### 3. Target a Single Module
-```bash
-cd gcp/live/dev/05_compute_services
-terragrunt apply
+```text
+Client
+  └─→ Cloud Armor WAF
+        └─→ Cloud API Gateway (PingIdentity JWT)
+              └─→ Agent Gateway (SOAM Engine)
+                    │
+                    ├─ Lightweight? ─────────────────────────→ Sync HTTP response
+                    │
+                    └─ Complex task? ──→ [gatekeeper-topic]
+                                              │
+                                    [GateKeeper + Guardrails]
+                                              │ PASS
+                                    [agent-1-inbound-topic]
+                                              │
+                                    Agent 1 (Cloud Run)
+                                      ├─→ Firestore  (PGA — Zero NAT)
+                                      ├─→ Cloud SQL  (PSA Peering)
+                                      ├─→ MCP Gateway → Cloud NAT → External APIs
+                                      ├─→ BigQuery CTT (PGA — Zero NAT)
+                                      └─→ Agent 2  (via SOAM bus — Multi-Agent)
 ```
 
 ---
 
 ## 🚀 CI/CD GitOps Workflow
 
-The repository includes an automated GitHub Actions pipeline at [`.github/workflows/terragrunt-gcp.yml`](.github/workflows/terragrunt-gcp.yml):
+| Git Event | Environment | Action |
+| :--- | :--- | :--- |
+| PR to `develop` | dev | `terragrunt plan` (plan only) |
+| Merge to `develop` | dev | `terragrunt apply` (auto) |
+| PR to `staging` | staging | `terragrunt plan` (plan only) |
+| Merge to `staging` | staging | `terragrunt apply` (auto) |
+| PR to `main` | prod | `terragrunt plan` (plan only) |
+| Merge to `main` + **Reviewer Approval** | prod | `terragrunt apply` (gated) |
+| `workflow_dispatch` | any | manual plan/apply/destroy |
 
-* **Pull Request to `develop`** ➔ Dynamically plans only **`dev`**
-* **Pull Request to `staging`** ➔ Dynamically plans only **`staging`**
-* **Pull Request to `main`** ➔ Dynamically plans only **`prod`**
-* **Merge to `develop`** ➔ Auto-applies to **`dev`**
-* **Merge to `staging`** ➔ Auto-applies to **`staging`**
-* **Merge to `main`** ➔ Auto-applies to **`prod`**
+**Auth**: All runs use **Workload Identity Federation (WIF)** — zero service account key files.
 
 ---
 
-## 📖 Documentation Index
+## 💻 Quick Start
 
-- **Terragrunt Deep Dive**: [`gcp/docs/TERRAGRUNT.md`](gcp/docs/TERRAGRUNT.md)
-- **GCP Architecture & Network Flows**: [`gcp/docs/ARCHITECTURE.md`](gcp/docs/ARCHITECTURE.md)
-- **Deployment Runbook**: [`gcp/docs/RUNBOOK.md`](gcp/docs/RUNBOOK.md)
+```bash
+# Plan the full dev environment (topological order, all 7 modules)
+cd gcp/live/dev
+terragrunt run --all plan
+
+# Apply dev end-to-end
+terragrunt run --all apply
+
+# Target a single module
+cd gcp/live/dev/05_compute_services
+terragrunt apply
+
+# View module dependency graph
+cd gcp/live/dev
+terragrunt dag graph
+```
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+| :--- | :--- |
+| [`gcp/docs/ARCHITECTURE.md`](gcp/docs/ARCHITECTURE.md) | Full architecture: SOAM, VPC topology, hop-by-hop lifecycle, module map |
+| [`gcp/docs/TERRAGRUNT.md`](gcp/docs/TERRAGRUNT.md) | Terragrunt deep-dive, DAG, CLI cheat sheet |
+| [`gcp/docs/RUNBOOK.md`](gcp/docs/RUNBOOK.md) | Step-by-step deployment & operational runbook |

@@ -6,7 +6,7 @@ This guide walks you through deploying the complete Digital Agent Platform (DAP)
 
 ## 🎨 Architecture & CI/CD Flow
 
-![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 
