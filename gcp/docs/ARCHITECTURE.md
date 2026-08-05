@@ -55,6 +55,27 @@ The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-
 
 ---
 
+### 💡 Why is a Customer VPC Required in a Serverless Platform?
+
+Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pub/Sub) are serverless, a **Customer VPC** is essential for 4 enterprise architectural requirements:
+
+1. 🔒 **Private Cloud SQL Access (Zero Public IP for DB)**:
+   - Cloud SQL instances live inside Google's managed *Service Producer Tenant VPC*.
+   - Cloud Run cannot peer directly with Google's Tenant VPC. Instead, Cloud Run connects to the **Customer VPC** via a **Serverless VPC Access Connector**, which then transits across the **Private Services Access (PSA)** peering connection into the Tenant VPC (`10.10.16.x`). This guarantees that your relational database is never exposed to the public internet.
+
+2. 🛡️ **Predictable Static Public IP for Outbound Tool Egress (Cloud NAT)**:
+   - When AI Agents or the MCP Gateway invoke external enterprise APIs, SaaS tools, or partner systems, those third-party firewalls require **IP Allowlisting**.
+   - Default serverless Cloud Run egress uses dynamic, rotating Google public IP pools that cannot be allowlisted. By routing outbound traffic through the Customer VPC with **Cloud NAT**, all egress traffic exits via a single, dedicated **Static Elastic Public IP** (`34.x.x.x`).
+
+3. ⚡ **Private Google Access (PGA) Routing**:
+   - The Customer VPC subnet enforces DNS resolution for `*.googleapis.com` to Google's Private VIPs (`199.36.153.8/30`), ensuring that all telemetry to BigQuery and state to Firestore stays strictly on Google's private software-defined network.
+
+4. 🏢 **Enterprise Compliance & Future Hybrid Connectivity**:
+   - The Customer VPC provides the foundation for **VPC Service Controls (VPC-SC)** perimeters to prevent data exfiltration.
+   - It allows seamless future expansion to on-premises data centers or mainframes via **Cloud VPN** or **Dedicated Interconnect**.
+
+---
+
 ## 3. Hop-by-Hop Packet & Connection Lifecycle
 
 ![GCP Hop-by-Hop Packet Journey](./gcp_hop_by_hop_diagram.png)
