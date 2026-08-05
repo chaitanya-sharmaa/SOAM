@@ -40,7 +40,7 @@ The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-
 
 ## 2. GCP VPC Network Topology & Traffic Flows
 
-![GCP DAP VPC Network Topology](./gcp_vpc_network_diagram.png)
+![GCP DAP VPC Network Topology](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_vpc_network_diagram.png)
 
 ### Key Network Boundaries:
 1. **Customer Custom VPC (`10.10.0.0/16`)**:
@@ -78,7 +78,7 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 
 ## 3. Hop-by-Hop Packet & Connection Lifecycle
 
-![GCP Hop-by-Hop Packet Journey](./gcp_hop_by_hop_diagram.png)
+![GCP Hop-by-Hop Packet Journey](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/gcp_hop_by_hop_diagram.png)
 
 ```text
 [Client] 

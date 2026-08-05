@@ -6,7 +6,7 @@ Production-grade, enterprise Infrastructure-as-Code (IaC) repository orchestrati
 
 ## 🎨 Platform Architecture & CI/CD Orchestration
 
-![Terragrunt Multi-Environment CI/CD Orchestration](gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/cloud-run/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 
