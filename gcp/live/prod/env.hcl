@@ -7,9 +7,9 @@ locals {
   project_id  = "my-dap-gcp-prod"
   region      = "europe-west1"
 
-  # Networking (Allocated distinct /24 and /28 CIDRs)
-  subnet_cidr        = "10.30.1.0/24"
-  vpc_connector_cidr = "10.30.2.0/28"
+  # Networking — Direct VPC Egress uses snet-private-workload directly (no VPC Access Connector)
+  # Use /22 in prod to support up to 1022 Cloud Run instance IPs under high scale
+  subnet_cidr        = "10.30.1.0/22"
 
   # Database (8 vCPU, 32 GB RAM Regional High-Availability DB)
   db_tier = "db-custom-8-32768"

@@ -1,5 +1,6 @@
 # ==============================================================================
 # Agent Backbone & Infrastructure Microservices
+# Cloud Run Direct VPC Egress: instances attach directly to snet-private-workload.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -20,8 +21,11 @@ resource "google_cloud_run_v2_service" "agent_registry" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -61,8 +65,11 @@ resource "google_cloud_run_v2_service" "agent_gateway" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -106,8 +113,11 @@ resource "google_cloud_run_v2_service" "gatekeeper" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -115,7 +125,7 @@ resource "google_cloud_run_v2_service" "gatekeeper" {
 
       env {
         name  = "GUARDRAILS_URL"
-        value = "http://${var.environment}-dap-guardrails.${var.region}.run.app"
+        value = "https://${var.environment}-dap-guardrails-${var.project_id}.${var.region}.run.app"
       }
       env {
         name  = "CTT_BIGQUERY_DATASET"
@@ -148,10 +158,21 @@ resource "google_pubsub_subscription" "gatekeeper_push_sub" {
       service_account_email = google_service_account.pubsub_invoker_sa.email
     }
   }
+
+  dead_letter_policy {
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-gatekeeper-dlq"
+    max_delivery_attempts = 5
+  }
+
+  retry_policy {
+    minimum_backoff = "10s"
+    maximum_backoff = "300s"
+  }
 }
 
 # ------------------------------------------------------------------------------
 # 4. MCP Gateway (Model Context Protocol Gateway to External APIs)
+#    Needs VPC egress for Cloud NAT → static public IP → external APIs/SaaS
 # ------------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "mcp_gateway" {
   name     = "${var.environment}-dap-mcp-gateway"
@@ -168,8 +189,11 @@ resource "google_cloud_run_v2_service" "mcp_gateway" {
     }
 
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -180,6 +204,7 @@ resource "google_cloud_run_v2_service" "mcp_gateway" {
 
 # ------------------------------------------------------------------------------
 # 5. Guardrails (Safety & Policy Engine)
+#    No VPC needed — only calls Vertex AI via PGA
 # ------------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "guardrails" {
   name     = "${var.environment}-dap-guardrails"
@@ -203,6 +228,7 @@ resource "google_cloud_run_v2_service" "guardrails" {
 
 # ------------------------------------------------------------------------------
 # 6. Grid Monitoring (Telemetry Collector)
+#    Writes to BigQuery via PGA — no VPC connector needed
 # ------------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "grid_monitoring" {
   name     = "${var.environment}-dap-grid-monitoring"
@@ -236,7 +262,7 @@ resource "google_cloud_run_v2_service" "grid_lens" {
   name     = "${var.environment}-dap-grid-lens"
   location = var.region
   project  = var.project_id
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # Or ALL for demo
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     service_account = var.service_account_emails["grid-lens"]

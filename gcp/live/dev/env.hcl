@@ -7,9 +7,8 @@ locals {
   project_id  = "my-dap-gcp-project"
   region      = "europe-west1"
 
-  # Networking
+  # Networking — Direct VPC Egress uses snet-private-workload directly (no VPC Access Connector)
   subnet_cidr        = "10.10.1.0/24"
-  vpc_connector_cidr = "10.10.2.0/28"
 
   # Database
   db_tier = "db-custom-2-7680"

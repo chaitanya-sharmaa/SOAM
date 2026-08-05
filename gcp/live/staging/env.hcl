@@ -7,9 +7,8 @@ locals {
   project_id  = "my-dap-gcp-staging"
   region      = "europe-west1"
 
-  # Networking (Allocated distinct /24 and /28 CIDRs)
+  # Networking — Direct VPC Egress uses snet-private-workload directly (no VPC Access Connector)
   subnet_cidr        = "10.20.1.0/24"
-  vpc_connector_cidr = "10.20.2.0/28"
 
   # Database (4 vCPU, 15 GB RAM for staging load testing)
   db_tier = "db-custom-4-15360"
