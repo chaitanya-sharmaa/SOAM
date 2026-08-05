@@ -1,12 +1,18 @@
-name: "DAP Infrastructure CI/CD"
+name: "GCP DAP Infrastructure CI/CD"
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "gcp/**"
+      - ".github/workflows/terraform-gcp.yml"
   pull_request:
     branches:
       - main
+    paths:
+      - "gcp/**"
+      - ".github/workflows/terraform-gcp.yml"
   workflow_dispatch:
 
 permissions:
@@ -16,13 +22,13 @@ permissions:
 
 env:
   TF_VERSION: "1.7.5"
-  WORKING_DIR: "environments/dev"
+  WORKING_DIR: "gcp/environments/dev"
   WIF_PROVIDER: "${{ secrets.GCP_WIF_PROVIDER }}" # e.g. projects/123456/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
   WIF_SERVICE_ACCOUNT: "${{ secrets.GCP_TF_SA_EMAIL }}" # e.g. sa-dap-tf-provisioner@my-gcp-project.iam.gserviceaccount.com
 
 jobs:
   terraform-plan:
-    name: "Terraform Plan & Validate"
+    name: "GCP Terraform Plan & Validate"
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
@@ -43,7 +49,7 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: "Terraform Format Check"
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -recursive gcp/
 
       - name: "Terraform Init"
         working-directory: ${{ env.WORKING_DIR }}
@@ -68,7 +74,7 @@ jobs:
           script: |
             const fs = require('fs');
             const plan = fs.readFileSync('${{ env.WORKING_DIR }}/plan.txt', 'utf8');
-            const output = `### 🌐 DAP Infrastructure Deployment Plan
+            const output = `### 🌐 GCP DAP Infrastructure Deployment Plan
             #### Environment: \`${{ env.WORKING_DIR }}\`
             #### Terraform Format & Style: 🖌 \`Success\`
             #### Terraform Initialization: ⚙️ \`Success\`
@@ -89,32 +95,3 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
-
-  # terraform-apply:
-  #   name: "Terraform Apply (Production / Dev)"
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-  #   steps:
-  #     - name: "Checkout Source Code"
-  #       uses: actions/checkout@v4
-
-  #     - name: "Authenticate to Google Cloud via WIF"
-  #       uses: google-github-actions/auth@v2
-  #       with:
-  #         workload_identity_provider: ${{ env.WIF_PROVIDER }}
-  #         service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
-  #         token_format: "access_token"
-
-  #     - name: "Setup Terraform CLI"
-  #       uses: hashicorp/setup-terraform@v3
-  #       with:
-  #         terraform_version: ${{ env.TF_VERSION }}
-
-  #     - name: "Terraform Init"
-  #       working-directory: ${{ env.WORKING_DIR }}
-  #       run: terraform init
-
-  #     - name: "Terraform Apply"
-  #       working-directory: ${{ env.WORKING_DIR }}
-  #       run: terraform apply -auto-approve

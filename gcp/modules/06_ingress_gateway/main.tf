@@ -10,6 +10,13 @@ resource "google_service_account" "api_gateway_sa" {
   project      = var.project_id
 }
 
+# Grant API Gateway permission to invoke Cloud Run backends
+resource "google_project_iam_member" "api_gateway_run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.api_gateway_sa.email}"
+}
+
 # 2. Cloud API Gateway Definition
 resource "google_api_gateway_api" "dap_api" {
   provider     = google-beta
