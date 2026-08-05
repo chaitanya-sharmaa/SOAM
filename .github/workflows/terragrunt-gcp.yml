@@ -76,9 +76,9 @@ jobs:
           terraform_wrapper: false
 
       - name: "Setup Terragrunt CLI"
-        uses: gruntwork-io/setup-terragrunt@v2
+        uses: autero1/action-terragrunt@v3
         with:
-          terragrunt_version: ${{ env.TG_VERSION }}
+          terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Validate Dependency DAG"
         working-directory: "gcp/live/${{ matrix.environment }}"
@@ -116,9 +116,9 @@ jobs:
           terraform_wrapper: false
 
       - name: "Setup Terragrunt CLI"
-        uses: gruntwork-io/setup-terragrunt@v2
+        uses: autero1/action-terragrunt@v3
         with:
-          terragrunt_version: ${{ env.TG_VERSION }}
+          terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Terragrunt Apply All (Dev)"
         working-directory: "gcp/live/dev"
@@ -150,9 +150,9 @@ jobs:
           terraform_wrapper: false
 
       - name: "Setup Terragrunt CLI"
-        uses: gruntwork-io/setup-terragrunt@v2
+        uses: autero1/action-terragrunt@v3
         with:
-          terragrunt_version: ${{ env.TG_VERSION }}
+          terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Terragrunt Apply All (Prod)"
         working-directory: "gcp/live/prod"
@@ -184,9 +184,9 @@ jobs:
           terraform_wrapper: false
 
       - name: "Setup Terragrunt CLI"
-        uses: gruntwork-io/setup-terragrunt@v2
+        uses: autero1/action-terragrunt@v3
         with:
-          terragrunt_version: ${{ env.TG_VERSION }}
+          terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Execute Terragrunt Action"
         working-directory: "gcp/live/${{ inputs.environment }}"
