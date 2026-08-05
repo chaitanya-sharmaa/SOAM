@@ -1,25 +1,33 @@
-# Multi-Cloud Enterprise Digital Agent Platform (DAP) Infrastructure
+# Google Cloud Platform (GCP) Digital Agent Platform (DAP) Infrastructure
 
-This repository contains production-grade, enterprise Terraform modules, architecture specifications, and GitHub Actions CI/CD pipelines to provision the **Digital Agent Platform (DAP)** across both **Google Cloud Platform (GCP)** and **Microsoft Azure**.
+This repository contains production-grade, enterprise Terraform modules and **Terragrunt** live deployment configurations to provision the **Digital Agent Platform (DAP)** on **Google Cloud Platform (GCP)**.
 
 ---
 
 ## 📁 Repository Structure
 
-```
+```text
 cloud-run/
 ├── .github/
 │   └── workflows/
-│       ├── terraform-gcp.yml        # GCP GitHub Actions CI/CD Pipeline (WIF Keyless Auth)
-│       └── terraform-azure.yml      # Azure GitHub Actions CI/CD Pipeline (OIDC Keyless Auth)
+│       └── terraform-gcp.yml        # GCP GitHub Actions CI/CD Pipeline (WIF Keyless Auth)
 │
 ├── gcp/                             # 🌐 Google Cloud Platform Implementation
 │   ├── bootstrap/                   # One-time bootstrap for GCP WIF & Remote State Bucket
-│   ├── environments/
-│   │   ├── dev/                     # Dev environment root composition
-│   │   ├── staging/                 # Staging environment
-│   │   └── prod/                    # Production environment
-│   ├── modules/
+│   │
+│   ├── live/                        # ⚡ Terragrunt Multi-Environment Deployments
+│   │   ├── root.hcl                 # Global Root: GCS Remote State & Provider generation
+│   │   └── dev/                     # Dev Environment DAG (Networking, Security, Compute, etc.)
+│   │       ├── env.hcl              # Environment variables
+│   │       ├── 01_networking/
+│   │       ├── 02_security_iam/
+│   │       ├── 03_data_state/
+│   │       ├── 04_messaging/
+│   │       ├── 05_compute_services/
+│   │       ├── 06_ingress_gateway/
+│   │       └── 07_observability/
+│   │
+│   ├── modules/                     # 📦 Reusable Terraform Modules
 │   │   ├── 01_networking/           # VPC, Subnets, PSA, VPC Connector, Cloud Armor WAF
 │   │   ├── 02_security_iam/         # Service Accounts, IAM Roles, Cloud KMS (CMEK), Secret Manager
 │   │   ├── 03_data_state/           # Private Cloud SQL, Firestore Native DB, BigQuery (CTT Analytics)
@@ -27,27 +35,14 @@ cloud-run/
 │   │   ├── 05_compute_services/     # Cloud Run v2 (Agents 1/2, Gateway, GateKeeper, MCP Gateway, Lens)
 │   │   ├── 06_ingress_gateway/      # Google Cloud API Gateway & PingIdentity JWT Auth Specs
 │   │   └── 07_observability/        # Immutable Audit Log Bucket, Sinks, Dashboards & Alerts
+│   │
+│   ├── environments/                # Standard Terraform Root Compositions
+│   │   └── dev/
+│   │
 │   └── docs/
-│       ├── ARCHITECTURE.md          # GCP Architecture breakdown & data flows
-│       └── RUNBOOK.md               # GCP Deployment Runbook
-│
-├── azure/                           # ☁️ Microsoft Azure Implementation
-│   ├── bootstrap/                   # One-time bootstrap for Azure Entra ID OIDC & State Storage
-│   ├── environments/
-│   │   ├── dev/                     # Dev environment root composition
-│   │   ├── staging/                 # Staging environment
-│   │   └── prod/                    # Production environment
-│   ├── modules/
-│   │   ├── 01_networking/           # VNet, Delegated Subnets, NAT Gateway, Front Door WAF
-│   │   ├── 02_security_iam/         # Managed Identities, Azure Key Vault, CMEK Keys, Secrets
-│   │   ├── 03_data_state/           # PostgreSQL Flexible Server, Cosmos DB, ADLS Gen2
-│   │   ├── 04_messaging/            # Service Bus Topics & Subscriptions with DLQ
-│   │   ├── 05_compute_services/     # Azure Container Apps (9 Multi-Agent Microservices)
-│   │   ├── 06_ingress_gateway/      # Azure API Management (APIM) & PingIdentity JWT Policy
-│   │   └── 07_observability/        # Log Analytics Workspace, App Insights, Immutable Audit Storage
-│   └── docs/
-│       ├── ARCHITECTURE.md          # Azure Architecture breakdown & 1-to-1 GCP mapping
-│       └── RUNBOOK.md               # Azure Deployment Runbook
+│       ├── ARCHITECTURE.md          # Architecture breakdown, network boundaries & data flows
+│       ├── TERRAGRUNT.md            # Terragrunt execution guide, DAG graph & commands
+│       └── RUNBOOK.md               # Deployment & operations runbook
 │
 ├── .gitignore
 └── README.md
@@ -55,24 +50,19 @@ cloud-run/
 
 ---
 
-## ⚡ 1-to-1 Cloud Feature Comparison
+## ⚡ Key Architectural Highlights
 
-| Architectural Domain | Google Cloud Platform (`gcp/`) | Microsoft Azure (`azure/`) |
-| :--- | :--- | :--- |
-| **Compute & Microservices** | Cloud Run v2 Services | **Azure Container Apps (ACA)** |
-| **Edge WAF & DDoS Defense** | Cloud Armor Security Policy | **Azure Front Door + WAF (OWASP CRS 3.2)** |
-| **Ingress API Gateway** | Cloud API Gateway + OpenID Connect | **Azure API Management (APIM) + JWT Policy** |
-| **Relational Database** | Cloud SQL (PostgreSQL 16) | **Azure PostgreSQL Flexible Server (Private VNet)** |
-| **Fast Session Store** | Cloud Firestore Native Mode | **Azure Cosmos DB (Serverless NoSQL)** |
-| **Event-Driven Messaging** | Cloud Pub/Sub Topics & Subscriptions | **Azure Service Bus Topics & Subscriptions** |
-| **Key & Secret Management** | Cloud KMS (CMEK) & Secret Manager | **Azure Key Vault (CMEK & RBAC Secrets)** |
-| **Analytics & Telemetry** | Google BigQuery Dataset | **Azure Data Lake Storage Gen2 (ADLS)** |
-| **Observability & Tracing** | Cloud Logging Sinks & Monitoring | **Log Analytics & Application Insights** |
-| **CI/CD Authentication** | Workload Identity Federation (WIF) | **Entra ID Federated Credentials (OIDC)** |
+* **Compute**: Multi-Agent system on Cloud Run v2 sandboxes with Zero Public Ingress (`INGRESS_TRAFFIC_INTERNAL_ONLY`).
+* **Ingress**: Google Cloud API Gateway with Cloud Armor edge security and PingIdentity JWT authentication.
+* **Networking**: Custom VPC (`10.10.0.0/16`) with Serverless VPC Access Connector (`10.10.2.0/28`) and Private Services Access (PSA) Peering.
+* **Storage & State**: Private Cloud SQL (PostgreSQL 15), Firestore Native Mode, and BigQuery Continuous Telemetry & Tracing (CTT).
+* **Security & IAM**: Dedicated per-service Service Accounts, Cloud KMS Customer-Managed Encryption Keys (CMEK), and Workload Identity Federation (WIF).
+* **IaC Orchestration**: Modular Terraform with **Terragrunt** to provide DRY multi-environment deployments with isolated per-module state.
 
 ---
 
 ## 🚀 Quick Navigation
 
-- **Google Cloud Platform**: See [`gcp/docs/ARCHITECTURE.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/ARCHITECTURE.md) and [`gcp/docs/RUNBOOK.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/RUNBOOK.md).
-- **Microsoft Azure**: See [`azure/docs/ARCHITECTURE.md`](file:///Users/chasharm4/gcp-arch/cloud-run/azure/docs/ARCHITECTURE.md) and [`azure/docs/RUNBOOK.md`](file:///Users/chasharm4/gcp-arch/cloud-run/azure/docs/RUNBOOK.md).
+- **Terragrunt Guide**: See [`gcp/docs/TERRAGRUNT.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/TERRAGRUNT.md).
+- **Architecture & Network Flows**: See [`gcp/docs/ARCHITECTURE.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/ARCHITECTURE.md).
+- **Deployment Runbook**: See [`gcp/docs/RUNBOOK.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/RUNBOOK.md).

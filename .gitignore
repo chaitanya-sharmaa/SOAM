@@ -5,6 +5,12 @@
 **/.terraform/
 .terraform/
 
+# Terragrunt cache and generated files
+**/.terragrunt-cache/
+.terragrunt-cache/
+**/.terragrunt-cache*
+
+
 # Terraform state files (local state should never be committed)
 *.tfstate
 *.tfstate.*
