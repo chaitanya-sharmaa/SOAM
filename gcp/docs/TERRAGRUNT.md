@@ -1,6 +1,12 @@
-# Terragrunt Guide: GCP Digital Agent Platform (DAP)
+# Terragrunt Multi-Environment Guide: GCP Digital Agent Platform (DAP)
 
-This guide covers how **Terragrunt** is structured in this repository to manage multi-environment GCP infrastructure with zero duplication, isolated state files, and automated dependency orchestration.
+This guide details how **Terragrunt** orchestrates multi-environment GCP infrastructure (`dev`, `staging`, `prod`) with zero duplication, isolated state files, automated dependency orchestration, and GitHub Actions CI/CD integration.
+
+---
+
+## 🎨 Multi-Environment Architecture & CI/CD Diagram
+
+![Terragrunt Multi-Environment CI/CD Orchestration](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 
@@ -8,6 +14,10 @@ This guide covers how **Terragrunt** is structured in this repository to manage 
 
 ```text
 cloud-run/
+├── .github/
+│   └── workflows/
+│       └── terragrunt-gcp.yml        # Multi-environment CI/CD workflow (WIF Keyless Auth)
+│
 ├── gcp/
 │   ├── modules/                      # Reusable Terraform Modules (Source Code)
 │   │   ├── 01_networking/
@@ -19,31 +29,32 @@ cloud-run/
 │   │   └── 07_observability/
 │   │
 │   └── live/                         # Terragrunt Live Deployments
-│       ├── root.hcl                  # Global Root: GCS Remote State & Provider generation
+│       ├── root.hcl                  # 🌐 Global Root: GCS Remote State & Provider generation
 │       │
-│       └── dev/                      # Development Environment
-│           ├── env.hcl               # Environment variables (dev, region, CIDRs, DB tier)
-│           ├── 01_networking/
-│           │   └── terragrunt.hcl
-│           ├── 02_security_iam/
-│           │   └── terragrunt.hcl
-│           ├── 03_data_state/
-│           │   └── terragrunt.hcl    # Depends on 01_networking & 02_security_iam
-│           ├── 04_messaging/
-│           │   └── terragrunt.hcl    # Depends on 02_security_iam
-│           ├── 05_compute_services/
-│           │   └── terragrunt.hcl    # Depends on 01, 02, 03, 04
-│           ├── 06_ingress_gateway/
-│           │   └── terragrunt.hcl    # Depends on 05_compute_services
-│           └── 07_observability/
-│               └── terragrunt.hcl
+│       ├── dev/                      # 🧪 Dev Environment (my-dap-gcp-dev)
+│       │   ├── env.hcl
+│       │   ├── 01_networking/terragrunt.hcl
+│       │   ├── 02_security_iam/terragrunt.hcl
+│       │   ├── 03_data_state/terragrunt.hcl
+│       │   ├── 04_messaging/terragrunt.hcl
+│       │   ├── 05_compute_services/terragrunt.hcl
+│       │   ├── 06_ingress_gateway/terragrunt.hcl
+│       │   └── 07_observability/terragrunt.hcl
+│       │
+│       ├── staging/                  # 🚀 Staging Environment (my-dap-gcp-staging)
+│       │   ├── env.hcl
+│       │   └── ... (01 through 07)
+│       │
+│       └── prod/                     # 🛡️ Production Environment (my-dap-gcp-prod)
+│           ├── env.hcl
+│           └── ... (01 through 07)
 ```
 
 ---
 
 ## 2. Dependency Graph (DAG)
 
-Terragrunt automatically analyzes `dependency` blocks to build the optimal execution graph:
+Terragrunt automatically analyzes `dependency` blocks across modules:
 
 ```mermaid
 flowchart TD
@@ -71,8 +82,8 @@ flowchart TD
 
 ## 3. Terragrunt CLI Commands
 
-### A. Deploying / Planning the Entire Environment
-From the `gcp/live/dev/` directory:
+### A. Deploying / Planning an Entire Environment
+From any environment directory (`dev`, `staging`, or `prod`):
 
 ```bash
 cd gcp/live/dev
@@ -88,7 +99,7 @@ terragrunt run --all apply
 ```
 
 ### B. Targeting a Single Module (Reduced Blast Radius)
-If you only changed Cloud Run services or want to iterate quickly:
+If you only changed Cloud Run microservices:
 
 ```bash
 cd gcp/live/dev/05_compute_services
@@ -108,18 +119,10 @@ terragrunt run --all destroy
 
 ---
 
-## 4. How to Add a New Environment (e.g. `prod`)
+## 4. GitHub Actions CI/CD Integration
 
-To add a new production environment:
-1. Create a new folder: `gcp/live/prod/`
-2. Copy `gcp/live/dev/env.hcl` into `gcp/live/prod/env.hcl` and adjust settings:
-   ```hcl
-   locals {
-     environment = "prod"
-     project_id  = "prod-dap-gcp-project"
-     region      = "europe-west1"
-     db_tier     = "db-custom-8-32768"
-   }
-   ```
-3. Copy the module folders (`01_networking/`, `02_security_iam/`, etc.) from `dev/` to `prod/`.
-4. Run `terragrunt run --all apply` inside `gcp/live/prod/`.
+The CI/CD pipeline at `.github/workflows/terragrunt-gcp.yml` automates the workflow:
+* **Pull Request**: Runs parallel matrix plan across `[dev, staging, prod]`.
+* **Merge to `develop`**: Runs `terragrunt run --all apply` against `gcp/live/dev`.
+* **Merge to `main`**: Runs `terragrunt run --all apply` against `gcp/live/prod`.
+* **Manual Dispatch**: Select environment (`dev`, `staging`, `prod`) and action (`plan`, `apply`, `destroy`).
