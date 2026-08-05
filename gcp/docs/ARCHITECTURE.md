@@ -40,7 +40,7 @@ The **Digital Agent Platform (DAP)** is a cloud-native, event-driven, multi-agen
 
 ## 2. GCP VPC Network Topology & Traffic Flows
 
-![GCP DAP VPC Network Topology](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/gcp_vpc_network_diagram.png)
+![GCP DAP VPC Network Topology](./gcp_vpc_network_diagram.png)
 
 ### Key Network Boundaries:
 1. **Customer Custom VPC (`10.10.0.0/16`)**:
@@ -57,7 +57,7 @@ The **Digital Agent Platform (DAP)** is a cloud-native, event-driven, multi-agen
 
 ### 🚀 Hop-by-Hop Packet & Connection Lifecycle
 
-![GCP Hop-by-Hop Packet Journey](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/gcp_hop_by_hop_diagram.png)
+![GCP Hop-by-Hop Packet Journey](./gcp_hop_by_hop_diagram.png)
 
 ```
 [Client] 
@@ -118,7 +118,7 @@ The **Digital Agent Platform (DAP)** is a cloud-native, event-driven, multi-agen
 
 ### Module 1: Ingress & Perimeter Defense
 
-![API Gateway to Cloud Run Connection](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/api_gateway_to_cloud_run_diagram.png)
+![API Gateway to Cloud Run Connection](./api_gateway_to_cloud_run_diagram.png)
 
 * **Cloud Armor (INT WAF)**: Protects edge entrypoints with rate limiting, OWASP ModSecurity rule sets (SQLi, XSS, RCE), and IP filtering.
 * **API Gateway**: Provides managed REST endpoints, rate limiting, and validates incoming JWT tokens issued by **PingIdentity**.
@@ -141,7 +141,7 @@ The **Digital Agent Platform (DAP)** is a cloud-native, event-driven, multi-agen
 
 ### Module 5: Governance & State
 
-![BigQuery Telemetry & Analytics](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/gcp_bigquery_highlight_diagram.png)
+![BigQuery Telemetry & Analytics](./gcp_bigquery_highlight_diagram.png)
 
 * **Guardrails**: Pre-execution and post-execution content moderation and safety policy engine.
 * **Firestore (`Agent State`)**: Low-latency NoSQL document store for conversational memory and checkpoints.

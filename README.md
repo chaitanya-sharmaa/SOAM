@@ -6,7 +6,7 @@ Production-grade, enterprise Infrastructure-as-Code (IaC) repository orchestrati
 
 ## 🎨 Platform Architecture & CI/CD Orchestration
 
-![Terragrunt Multi-Environment CI/CD Orchestration](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](gcp/docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 
@@ -102,7 +102,7 @@ terragrunt apply
 
 ## 🚀 CI/CD GitOps Workflow
 
-The repository includes an automated GitHub Actions pipeline at [`.github/workflows/terragrunt-gcp.yml`](file:///Users/chasharm4/gcp-arch/cloud-run/.github/workflows/terragrunt-gcp.yml):
+The repository includes an automated GitHub Actions pipeline at [`.github/workflows/terragrunt-gcp.yml`](.github/workflows/terragrunt-gcp.yml):
 
 * **Pull Request to `develop`** ➔ Dynamically plans only **`dev`**
 * **Pull Request to `staging`** ➔ Dynamically plans only **`staging`**
@@ -115,6 +115,6 @@ The repository includes an automated GitHub Actions pipeline at [`.github/workfl
 
 ## 📖 Documentation Index
 
-- **Terragrunt Deep Dive**: [`gcp/docs/TERRAGRUNT.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/TERRAGRUNT.md)
-- **GCP Architecture & Network Flows**: [`gcp/docs/ARCHITECTURE.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/ARCHITECTURE.md)
-- **Deployment Runbook**: [`gcp/docs/RUNBOOK.md`](file:///Users/chasharm4/gcp-arch/cloud-run/gcp/docs/RUNBOOK.md)
+- **Terragrunt Deep Dive**: [`gcp/docs/TERRAGRUNT.md`](gcp/docs/TERRAGRUNT.md)
+- **GCP Architecture & Network Flows**: [`gcp/docs/ARCHITECTURE.md`](gcp/docs/ARCHITECTURE.md)
+- **Deployment Runbook**: [`gcp/docs/RUNBOOK.md`](gcp/docs/RUNBOOK.md)
