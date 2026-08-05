@@ -9,18 +9,18 @@ output "vpc_name" {
 }
 
 output "subnet_id" {
-  description = "The ID of the private subnetwork"
+  description = "The ID of the private subnetwork (snet-private-workload). Used by Cloud Run Direct VPC Egress."
   value       = google_compute_subnetwork.private_subnet.id
 }
 
 output "subnet_name" {
-  description = "The Name of the private subnetwork"
+  description = "The Name of the private subnetwork (snet-private-workload)"
   value       = google_compute_subnetwork.private_subnet.name
 }
 
-output "vpc_connector_id" {
-  description = "The ID of the Serverless VPC Access connector for Cloud Run"
-  value       = google_vpc_access_connector.connector.id
+output "nat_static_ip" {
+  description = "The static public IP address used by Cloud NAT for predictable external egress (allowlistable by partner firewalls)"
+  value       = google_compute_address.nat_static_ip.address
 }
 
 output "security_policy_id" {

@@ -15,6 +15,5 @@ terraform {
 }
 
 inputs = {
-  subnet_cidr        = local.env_vars.locals.subnet_cidr
-  vpc_connector_cidr = local.env_vars.locals.vpc_connector_cidr
+  subnet_cidr = local.env_vars.locals.subnet_cidr
 }

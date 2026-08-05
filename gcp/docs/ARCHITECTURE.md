@@ -44,14 +44,15 @@ The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-
 
 ### Key Network Boundaries:
 1. **Customer Custom VPC (`10.10.0.0/16`)**:
-   - `snet-vpc-connector` (`10.10.2.0/28`): Micro-VM bridge connecting serverless Cloud Run into the VPC.
-   - `snet-private-workload` (`10.10.1.0/24`): Subnet with **Private Google Access (PGA)** enabled.
-   - **Cloud Router & Cloud NAT**: Handles static outbound internet egress for external MCP tool APIs.
-   - **Reserved PSA Peering Range** (`10.10.16.0/20`): Connects to Google's Service Producer Tenant VPC.
+   - `snet-private-workload` (`10.10.1.0/24`): Subnet with **Private Google Access (PGA)** enabled. Cloud Run instances attach **directly** to this subnet via **Direct VPC Egress** — no proxy VMs.
+   - **Cloud Router & Cloud NAT** (Static IP `MANUAL_ONLY`): Provides a deterministic, allowlistable static public IP for external MCP tool API egress.
+   - **Reserved PSA Peering Range** (`10.10.16.0/20`): Connects to Google's Service Producer Tenant VPC for Cloud SQL.
+   - ~~`snet-vpc-connector` (`10.10.2.0/28`)~~: **Removed** — VPC Access Connector (e2-micro VM fleet) eliminated in favour of Cloud Run Direct VPC Egress.
 2. **Google Service Producer Tenant VPC**:
    - Hosts **Cloud SQL (PostgreSQL 15)** instances with private IP addressing (`10.10.16.x`) peered via **Private Services Access (PSA)**.
 3. **Google PaaS & Global APIs (Internal Backbone)**:
    - BigQuery, Firestore, Cloud KMS, Secret Manager, and Cloud Pub/Sub accessed privately over Google's internal software-defined network via **Private Google Access (PGA)** (Zero NAT).
+
 
 ---
 

@@ -17,7 +17,8 @@ terraform {
 dependency "networking" {
   config_path = "../01_networking"
   mock_outputs = {
-    vpc_connector_id = "projects/my-dap-gcp-project/locations/europe-west1/connectors/dev-dap-connector"
+    vpc_id    = "projects/my-dap-gcp-project/global/networks/dev-dap-vpc"
+    subnet_id = "projects/my-dap-gcp-project/regions/europe-west1/subnetworks/dev-dap-private-subnet"
   }
 }
 
@@ -58,7 +59,8 @@ dependency "messaging" {
 }
 
 inputs = {
-  vpc_connector_id         = dependency.networking.outputs.vpc_connector_id
+  vpc_id                   = dependency.networking.outputs.vpc_id
+  subnet_id                = dependency.networking.outputs.subnet_id
   service_account_emails   = dependency.security.outputs.service_accounts
   container_images         = local.env_vars.locals.container_images
   firestore_database_name  = dependency.data_state.outputs.firestore_database_name

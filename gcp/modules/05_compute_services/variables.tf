@@ -15,8 +15,13 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "vpc_connector_id" {
-  description = "ID of the Serverless VPC Access connector"
+variable "vpc_id" {
+  description = "ID of the Customer Custom VPC network (used by Cloud Run Direct VPC Egress network_interfaces)"
+  type        = string
+}
+
+variable "subnet_id" {
+  description = "ID of snet-private-workload subnet. Cloud Run instances attach here directly via Direct VPC Egress (no connector VMs)."
   type        = string
 }
 

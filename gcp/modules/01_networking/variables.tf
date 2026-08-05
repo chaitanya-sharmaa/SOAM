@@ -16,13 +16,7 @@ variable "environment" {
 }
 
 variable "subnet_cidr" {
-  description = "CIDR range for the private subnetwork"
+  description = "CIDR range for the private subnetwork. Use /24 for dev/staging, /22 for prod (supports up to 1022 Direct VPC Egress Cloud Run IPs)"
   type        = string
-  default     = "10.10.0.0/20"
-}
-
-variable "vpc_connector_cidr" {
-  description = "CIDR range for the Serverless VPC Access connector (/28 required)"
-  type        = string
-  default     = "10.10.16.0/28"
+  default     = "10.10.1.0/24"
 }

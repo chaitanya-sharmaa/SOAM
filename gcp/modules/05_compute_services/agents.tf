@@ -1,5 +1,7 @@
 # ==============================================================================
 # Agent Project Workspace: Agent 1 & Agent 2 Execution Compute
+# Cloud Run Direct VPC Egress: instances attach directly to snet-private-workload.
+# No VPC Access Connector proxy VMs — lower latency, higher throughput, no bottleneck.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -15,13 +17,19 @@ resource "google_cloud_run_v2_service" "agent_1" {
     service_account = var.service_account_emails["agent-1"]
 
     scaling {
-      min_instance_count = 0
+      min_instance_count = var.environment == "prod" ? 2 : 1
       max_instance_count = 10
     }
 
+    # Direct VPC Egress: Cloud Run instance IPs come from snet-private-workload
+    # No connector proxy — packets enter VPC natively, then route to Cloud SQL (PSA)
+    # or Cloud NAT (external APIs). BigQuery/Firestore go via PGA (no VPC needed).
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -48,11 +56,11 @@ resource "google_cloud_run_v2_service" "agent_1" {
       }
       env {
         name  = "MCP_GATEWAY_URL"
-        value = "http://${var.environment}-dap-mcp-gateway.${var.region}.run.app"
+        value = "https://${var.environment}-dap-mcp-gateway-${var.project_id}.${var.region}.run.app"
       }
       env {
         name  = "GUARDRAILS_URL"
-        value = "http://${var.environment}-dap-guardrails.${var.region}.run.app"
+        value = "https://${var.environment}-dap-guardrails-${var.project_id}.${var.region}.run.app"
       }
     }
   }
@@ -81,6 +89,16 @@ resource "google_pubsub_subscription" "agent_1_push_sub" {
       service_account_email = google_service_account.pubsub_invoker_sa.email
     }
   }
+
+  dead_letter_policy {
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-agent-1-dlq"
+    max_delivery_attempts = 5
+  }
+
+  retry_policy {
+    minimum_backoff = "10s"
+    maximum_backoff = "600s"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -96,13 +114,16 @@ resource "google_cloud_run_v2_service" "agent_2" {
     service_account = var.service_account_emails["agent-2"]
 
     scaling {
-      min_instance_count = 0
+      min_instance_count = var.environment == "prod" ? 2 : 1
       max_instance_count = 10
     }
 
     vpc_access {
-      connector = var.vpc_connector_id
-      egress    = "PRIVATE_RANGES_ONLY"
+      network_interfaces {
+        network    = var.vpc_id
+        subnetwork = var.subnet_id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -129,7 +150,7 @@ resource "google_cloud_run_v2_service" "agent_2" {
       }
       env {
         name  = "MCP_GATEWAY_URL"
-        value = "http://${var.environment}-dap-mcp-gateway.${var.region}.run.app"
+        value = "https://${var.environment}-dap-mcp-gateway-${var.project_id}.${var.region}.run.app"
       }
     }
   }
@@ -157,5 +178,15 @@ resource "google_pubsub_subscription" "agent_2_push_sub" {
     oidc_token {
       service_account_email = google_service_account.pubsub_invoker_sa.email
     }
+  }
+
+  dead_letter_policy {
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-agent-2-dlq"
+    max_delivery_attempts = 5
+  }
+
+  retry_policy {
+    minimum_backoff = "10s"
+    maximum_backoff = "600s"
   }
 }
