@@ -91,10 +91,10 @@ Even though compute (Cloud Run), storage (Firestore/BigQuery), and messaging (Pu
 * **Security Inspection**: **Cloud Armor** inspects the HTTP headers and payload against OWASP ModSecurity Core Rule Sets (SQLi, XSS, RCE) and enforces rate limiting rules (max 500 req/min).
 * **Action**: Malicious or rate-exceeded requests are blocked with `403 Forbidden` / `429 Too Many Requests` at Google's edge before reaching downstream compute.
 
-#### 📍 Hop 2: Authentication & Gateway Routing (Cloud Armor ➔ Cloud API Gateway ➔ Agent Gateway)
-* **What happens**: Clean requests pass from Cloud Armor to **Cloud API Gateway**.
-* **Auth Verification**: The API Gateway intercepts the `Authorization: Bearer <JWT>` header and validates cryptographic signature, expiration, and issuer against **PingIdentity's JWKS** endpoint.
-* **Routing**: The API Gateway uses its service account (`sa-dev-api-gateway`) with `roles/run.invoker` to mint a Google OIDC identity token and forward the request to the `agent-gateway` Cloud Run service over Google's secure internal proxy network.
+#### 📍 Hop 2: Authentication & Gateway Routing (Cloud Armor ➔ Cloud API Gateway ➔ Agent Coordinator)
+* **What happens**: Clean requests pass to **Cloud API Gateway**.
+* **Auth Verification**: The API Gateway intercepts the `Authorization: Bearer <JWT>` header and validates cryptographic signature, expiration, and issuer against **Google IAM / Google Accounts JWKS** endpoint (`https://www.googleapis.com/oauth2/v3/certs`).
+* **Routing**: The API Gateway uses its service account (`sa-dev-api-gateway`) with `roles/run.invoker` to mint an internal Google OIDC identity token and forward the request to the `agent-1` Cloud Run service over Google's secure internal proxy network.
 
 #### 📍 Hop 3: East-West Microservice Orchestration (Cloud Run Inter-Service Communication)
 * **What happens**: The `agent-gateway` routes tasks to `gatekeeper`, which calls `guardrails` for prompt safety analysis.
