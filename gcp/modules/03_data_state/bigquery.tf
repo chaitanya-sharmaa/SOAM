@@ -13,10 +13,6 @@ resource "google_bigquery_dataset" "ctt_analytics_dataset" {
   location                    = var.region
   project                     = var.project_id
   default_table_expiration_ms = 7776000000 # 90 days retention
-
-  default_encryption_configuration {
-    kms_key_name = var.kms_bigquery_key_id
-  }
 }
 
 # 1. Table for Agent Telemetry & Traces

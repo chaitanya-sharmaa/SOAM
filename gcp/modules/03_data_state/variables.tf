@@ -26,12 +26,3 @@ variable "db_tier" {
   default     = "db-custom-2-7680"
 }
 
-variable "kms_cloudsql_key_id" {
-  description = "KMS CMEK key ID for Cloud SQL"
-  type        = string
-}
-
-variable "kms_bigquery_key_id" {
-  description = "KMS CMEK key ID for BigQuery"
-  type        = string
-}

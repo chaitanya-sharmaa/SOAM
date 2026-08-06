@@ -8,8 +8,3 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
-
-variable "kms_pubsub_key_id" {
-  description = "KMS CMEK key ID for Pub/Sub encryption"
-  type        = string
-}

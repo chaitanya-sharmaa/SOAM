@@ -23,21 +23,7 @@ dependency "networking" {
   }
 }
 
-dependency "security" {
-  config_path                             = "../02_security_iam"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
-  mock_outputs_merge_strategy_with_state  = "shallow"
-  mock_outputs = {
-    kms_keys = {
-      cloudsql = "projects/my-dap-gcp-project/locations/europe-west1/keyRings/dev-dap-keyring/cryptoKeys/key-cloudsql"
-      bigquery = "projects/my-dap-gcp-project/locations/europe-west1/keyRings/dev-dap-keyring/cryptoKeys/key-bigquery"
-    }
-  }
-}
-
 inputs = {
-  vpc_id              = dependency.networking.outputs.vpc_id
-  kms_cloudsql_key_id = dependency.security.outputs.kms_keys["cloudsql"]
-  kms_bigquery_key_id = dependency.security.outputs.kms_keys["bigquery"]
-  db_tier             = local.env_vars.locals.db_tier
+  vpc_id  = dependency.networking.outputs.vpc_id
+  db_tier = local.env_vars.locals.db_tier
 }

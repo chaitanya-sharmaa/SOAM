@@ -16,7 +16,6 @@ locals {
 resource "google_pubsub_topic" "dead_letter_topic" {
   name         = "${var.environment}-dap-dlq-topic"
   project      = var.project_id
-  kms_key_name = var.kms_pubsub_key_id
 
   message_retention_duration = "604800s" # 7 days retention
 }
@@ -30,10 +29,9 @@ resource "google_pubsub_subscription" "dlq_subscription" {
 
 # 2. Main Inbound and Routing Topics with CMEK Encryption
 resource "google_pubsub_topic" "topics" {
-  for_each     = toset(local.topics)
-  name         = "${var.environment}-dap-${each.key}"
-  project      = var.project_id
-  kms_key_name = var.kms_pubsub_key_id
+  for_each = toset(local.topics)
+  name     = "${var.environment}-dap-${each.key}"
+  project  = var.project_id
 
   message_retention_duration = "86400s" # 1 day retention
 }

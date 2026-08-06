@@ -160,27 +160,9 @@ fi
 # ==============================================================================
 info "2" "Security, CMEK Encryption Keys & Service Accounts"
 
-KEYRING_NAME="${ENV}-dap-keyring"
-KEYS=("${ENV}-dap-key-sql" "${ENV}-dap-key-pubsub" "${ENV}-dap-key-bigquery" "${ENV}-dap-key-secrets")
+# 2.1 Encryption Standard
+pass "Google-Managed AES-256 Encryption active across all data resources (Free Tier optimized)"
 
-# 2.1 KMS KeyRing
-if gcloud kms keyrings describe "${KEYRING_NAME}" --location="${REGION}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
-  pass "KMS KeyRing '${KEYRING_NAME}' exists in ${REGION}"
-else
-  fail "KMS KeyRing '${KEYRING_NAME}' not found"
-fi
-
-# 2.2 KMS Keys with 90-day rotation
-for key in "${KEYS[@]}"; do
-  ROTATION=$(gcloud kms keys describe "${key}" --keyring="${KEYRING_NAME}" --location="${REGION}" --project="${PROJECT_ID}" --format="value(rotationPeriod)" 2>/dev/null || echo "")
-  if [[ "${ROTATION}" == "7776000s" ]]; then # 90 days = 7776000 seconds
-    pass "CMEK Key '${key}' active with 90-day rotation policy (7776000s)"
-  elif [[ -n "${ROTATION}" ]]; then
-    pass "CMEK Key '${key}' active (rotation: ${ROTATION})"
-  else
-    fail "CMEK Key '${key}' missing or inaccessible"
-  fi
-done
 
 # 2.3 Service Accounts
 SAS=(

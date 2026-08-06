@@ -12,24 +12,15 @@ locals {
   ]
 }
 
-# 1. Create Secrets in Secret Manager with CMEK Encryption
+# 1. Create Secrets in Secret Manager with standard Google-managed encryption
 resource "google_secret_manager_secret" "secrets" {
   for_each  = toset(local.secret_names)
   secret_id = "${var.environment}-dap-${each.key}"
   project   = var.project_id
 
   replication {
-    user_managed {
-      replicas {
-        location = var.region
-        customer_managed_encryption {
-          kms_key_name = google_kms_crypto_key.secrets_key.id
-        }
-      }
-    }
+    auto {}
   }
-
-  depends_on = [google_kms_crypto_key.secrets_key]
 }
 
 # 2. Add initial placeholder versions (to be updated securely via CI/CD)

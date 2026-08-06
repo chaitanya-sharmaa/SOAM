@@ -22,13 +22,11 @@ module "security_iam" {
 
 # 3. Module 03: Data & State (Cloud SQL, Firestore Native, CTT BigQuery)
 module "data_state" {
-  source              = "../../modules/03_data_state"
-  project_id          = var.project_id
-  region              = var.region
-  environment         = var.environment
-  vpc_id              = module.networking.vpc_id
-  kms_cloudsql_key_id = module.security_iam.kms_keys["cloudsql"]
-  kms_bigquery_key_id = module.security_iam.kms_keys["bigquery"]
+  source      = "../../modules/03_data_state"
+  project_id  = var.project_id
+  region      = var.region
+  environment = var.environment
+  vpc_id      = module.networking.vpc_id
 
   # Ensure Private Service Access peering is established prior to Cloud SQL
   depends_on = [module.networking.private_vpc_connection]
@@ -36,10 +34,9 @@ module "data_state" {
 
 # 4. Module 04: Event-Driven Messaging (Pub/Sub Topics & Push Subscriptions)
 module "messaging" {
-  source            = "../../modules/04_messaging"
-  project_id        = var.project_id
-  environment       = var.environment
-  kms_pubsub_key_id = module.security_iam.kms_keys["pubsub"]
+  source      = "../../modules/04_messaging"
+  project_id  = var.project_id
+  environment = var.environment
 }
 
 # 5. Module 05: Serverless Microservices Compute (Cloud Run v2)

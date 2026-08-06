@@ -33,8 +33,6 @@ resource "google_sql_database_instance" "agent_registry_db" {
       value = "on"
     }
   }
-
-  encryption_key_name = var.kms_cloudsql_key_id
 }
 
 resource "google_sql_database" "registry_database" {
@@ -76,8 +74,6 @@ resource "google_sql_database_instance" "agent_gateway_db" {
       start_time                     = "03:30"
     }
   }
-
-  encryption_key_name = var.kms_cloudsql_key_id
 }
 
 resource "google_sql_database" "gateway_database" {
