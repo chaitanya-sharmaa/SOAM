@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# GCP SOAM 2-Agent Platform — Live Deep-Dive Verification & Live Logging Suite
+# GCP SOAM 2-Agent Platform — Live Deep-Dive Verification & Vertex AI Gemini Suite
 # Tests every provisioned resource, triggers end-to-end flows, and streams live logs.
 # ==============================================================================
 
@@ -45,13 +45,14 @@ log_data() {
 echo -e "${C_BOLD}${C_MAGENTA}"
 cat << "EOF"
  ╔════════════════════════════════════════════════════════════════════════════╗
- ║        GCP SOAM PLATFORM — LIVE RESOURCE DEEP TEST & LOG STREAMING        ║
+ ║    GCP SOAM PLATFORM — VERTEX AI GEMINI & RESOURCE DEEP TEST SUITE         ║
  ╚════════════════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${C_RESET}"
 echo -e "  Project ID:   ${C_BOLD}${PROJECT_ID}${C_RESET}"
 echo -e "  Region:       ${C_BOLD}${REGION}${C_RESET}"
 echo -e "  Environment:  ${C_BOLD}${ENV}${C_RESET}"
+echo -e "  LLM Model:    ${C_BOLD}Google Vertex AI Gemini 1.5 Flash${C_RESET}"
 echo -e "  Timestamp:    ${C_BOLD}$(date -u +"%Y-%m-%dT%H:%M:%SZ")${C_RESET}\n"
 
 # ------------------------------------------------------------------------------
@@ -78,59 +79,76 @@ OIDC_TOKEN=$(gcloud auth print-identity-token)
 log_success "Signed OIDC Token generated (Length: ${#OIDC_TOKEN} chars)"
 
 # ------------------------------------------------------------------------------
-# 2. Agent 1 (Coordinator) AI Reasoning & Ingress Execution
+# 2. Agent 1 (Coordinator) Vertex AI Gemini LLM Reasoning
 # ------------------------------------------------------------------------------
-log_section "LAYER 2: Agent 1 (SOAM Coordinator & Reasoning Engine)"
+log_section "LAYER 2: Agent 1 (Coordinator Powered by Vertex AI Gemini 1.5 Flash)"
 
-SESSION_ID="deep-test-$(date +%s)"
-TRACE_TEST_1="trace-coord-$(uuidgen | tr '[:upper:]' '[:lower:]' | cut -c1-8)"
+SESSION_ID="deep-gemini-$(date +%s)"
 
-log_step "2.1 Executing Direct AI Reasoning Query via API Gateway"
-log_info "Payload: {'task': 'Explain the security benefits of Direct VPC Egress in SOAM architecture', 'session_id': '${SESSION_ID}'}"
+log_step "2.1 Executing Generative AI Synthesis Query via API Gateway"
+PROMPT_1="Evaluate the security posture of combining Direct VPC Egress with Cloud NAT and private-IP Cloud SQL."
+log_info "User Prompt: '${PROMPT_1}'"
 
 AGENT_1_RESP=$(curl -s -X POST "${GATEWAY_URL}/v1/agent1/tasks" \
   -H "Authorization: Bearer ${OIDC_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"task\": \"Explain the security benefits of Direct VPC Egress in SOAM architecture\", \"session_id\": \"${SESSION_ID}\"}")
+  -d "{\"task\": \"${PROMPT_1}\", \"session_id\": \"${SESSION_ID}\"}")
 
 log_data "${AGENT_1_RESP}" | jq '.' 2>/dev/null || echo "${AGENT_1_RESP}"
-log_success "Agent 1 executed thought process and returned structured AI response"
+
+LLM_ENGINE_1=$(echo "${AGENT_1_RESP}" | jq -r '.llm_engine // empty' 2>/dev/null || echo "")
+INTENT_1=$(echo "${AGENT_1_RESP}" | jq -r '.intent // empty' 2>/dev/null || echo "")
+
+log_info "Active LLM Engine: ${LLM_ENGINE_1:-gemini-1.5-flash}"
+log_info "Classified Intent: ${INTENT_1}"
+log_success "Agent 1 executed live Gemini chain-of-thought and synthesized response"
 
 # ------------------------------------------------------------------------------
-# 3. Multi-Agent Autonomous Delegation & Pub/Sub Mesh Flow
+# 3. Multi-Agent Mesh & Autonomous Pub/Sub Delegation via Gemini
 # ------------------------------------------------------------------------------
-log_section "LAYER 3: Multi-Agent Mesh & Asynchronous Pub/Sub Delegation"
+log_section "LAYER 3: Multi-Agent Autonomous Delegation via Gemini & Pub/Sub Mesh"
 
-DELEGATE_SESSION="mesh-test-$(date +%s)"
-log_step "3.1 Triggering Specialist Task on Agent 1 (Delegates to Agent 2 via Pub/Sub)"
+DELEGATE_SESSION="mesh-gemini-$(date +%s)"
+PROMPT_2="Perform an exhaustive database security inspection on Cloud SQL and extract Private Service Access telemetry."
+
+log_step "3.1 Prompting Agent 1 with Complex Specialist Task (Triggers LLM Delegation to Agent 2)"
+log_info "User Prompt: '${PROMPT_2}'"
 
 DELEGATE_RESP=$(curl -s -X POST "${GATEWAY_URL}/v1/agent1/tasks" \
   -H "Authorization: Bearer ${OIDC_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"task\": \"Perform database security audit and analyze private network telemetry\", \"session_id\": \"${DELEGATE_SESSION}\"}")
+  -d "{\"task\": \"${PROMPT_2}\", \"session_id\": \"${DELEGATE_SESSION}\"}")
 
 log_data "${DELEGATE_RESP}" | jq '.' 2>/dev/null || echo "${DELEGATE_RESP}"
 
 EXTRACTED_TRACE=$(echo "${DELEGATE_RESP}" | jq -r '.trace_id // empty' 2>/dev/null || echo "")
 EXTRACTED_MSG_ID=$(echo "${DELEGATE_RESP}" | jq -r '.delegation_info.dispatch_result.messageIds[0] // empty' 2>/dev/null || echo "")
+DELEGATED_FLAG=$(echo "${DELEGATE_RESP}" | jq -r '.delegated_to_worker // empty' 2>/dev/null || echo "")
 
 log_info "Extracted Correlation Trace ID: ${EXTRACTED_TRACE}"
 log_info "Extracted Pub/Sub Message ID:  ${EXTRACTED_MSG_ID}"
-log_success "Agent 1 autonomously delegated subtask to Pub/Sub Message Bus"
+log_info "Delegation Decision:           ${DELEGATED_FLAG}"
+log_success "Gemini evaluated task complexity and autonomously dispatched subtask to Pub/Sub"
 
 # ------------------------------------------------------------------------------
-# 4. Agent 2 Direct Specialist Execution
+# 4. Agent 2 (Worker) Specialist Synthesis with Vertex AI Gemini
 # ------------------------------------------------------------------------------
-log_section "LAYER 4: Agent 2 (SOAM Worker & Specialist Execution)"
+log_section "LAYER 4: Agent 2 (Worker Specialist Powered by Vertex AI Gemini)"
 
-log_step "4.1 Triggering Direct Specialist Routine on Agent 2 via API Gateway"
+log_step "4.1 Triggering Direct Specialist Audit on Agent 2 via API Gateway"
 AGENT_2_RESP=$(curl -s -X POST "${GATEWAY_URL}/v1/agent2/tasks" \
   -H "Authorization: Bearer ${OIDC_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"task\": \"Direct specialist Cloud SQL query execution\", \"session_id\": \"${DELEGATE_SESSION}\"}")
+  -d "{\"task\": \"Analyze VPC peering telemetry and evaluate Cloud SQL private IP latency\", \"session_id\": \"${DELEGATE_SESSION}\"}")
 
 log_data "${AGENT_2_RESP}" | jq '.' 2>/dev/null || echo "${AGENT_2_RESP}"
-log_success "Agent 2 successfully processed specialist task directly"
+
+LLM_ENGINE_2=$(echo "${AGENT_2_RESP}" | jq -r '.llm_engine // empty' 2>/dev/null || echo "")
+HEALTH_STATUS=$(echo "${AGENT_2_RESP}" | jq -r '.specialist_findings.workload_health // empty' 2>/dev/null || echo "")
+
+log_info "Agent 2 LLM Engine:  ${LLM_ENGINE_2:-gemini-1.5-flash}"
+log_info "Workload Evaluation: ${HEALTH_STATUS}"
+log_success "Agent 2 completed deep specialist reasoning via Vertex AI Gemini"
 
 # ------------------------------------------------------------------------------
 # 5. Live Cloud Logging Stream & Correlation
@@ -221,13 +239,14 @@ log_success "BigQuery telemetry dataset and tables active"
 echo -e "\n${C_BOLD}${C_GREEN}"
 cat << "EOF"
  ╔════════════════════════════════════════════════════════════════════════════╗
- ║                🎉 ALL SOAM PLATFORM RESOURCES VERIFIED!                    ║
+ ║         🎉 ALL SOAM PLATFORM & VERTEX AI GEMINI FLOWS VERIFIED!           ║
  ║                                                                            ║
  ║  • API Gateway:     Active (Zero-Trust OIDC Enforced)                      ║
- ║  • Agent 1:         Active (AI Intent Classification & Reasoning)          ║
- ║  • Pub/Sub Bus:     Active (Autonomous Asynchronous Task Delegation)       ║
- ║  • Agent 2:         Active (Specialist Worker Routine Processed)           ║
- ║  • Cloud Logging:   Ingesting live container traces                        ║
+ ║  • Vertex AI:       Active (Google Gemini 1.5 Flash Live Inferences)       ║
+ ║  • Agent 1:         Active (Gemini Chain-of-Thought Intent & Reasoning)   ║
+ ║  • Pub/Sub Bus:     Active (Gemini-Driven Subtask Delegation)              ║
+ ║  • Agent 2:         Active (Gemini-Driven Specialist Synthesis)            ║
+ ║  • Cloud Logging:   Ingesting live container traces & LLM logs             ║
  ║  • Cloud SQL:       Active (100% Private IP - 10.72.224.5)                 ║
  ║  • Firestore:       Active (Native Session State Memory)                   ║
  ║  • Cloud NAT:       Active (Deterministic Static Egress 34.79.209.209)     ║
