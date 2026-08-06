@@ -4,7 +4,7 @@
 
 locals {
   environment = "dev"
-  project_id  = "my-dap-gcp-project"
+  project_id  = "project-ddfa7a80-7677-4268-95a"
   region      = "europe-west1"
 
   # Networking — Direct VPC Egress uses snet-private-workload directly (no VPC Access Connector)
@@ -20,14 +20,14 @@ locals {
 
   # Microservice Container Images
   container_images = {
-    "agent-registry"  = "gcr.io/my-dap-gcp-project/agent-registry:latest"
-    "agent-gateway"   = "gcr.io/my-dap-gcp-project/agent-gateway:latest"
-    "gatekeeper"      = "gcr.io/my-dap-gcp-project/gatekeeper:latest"
-    "mcp-gateway"     = "gcr.io/my-dap-gcp-project/mcp-gateway:latest"
-    "guardrails"      = "gcr.io/my-dap-gcp-project/guardrails:latest"
-    "grid-monitoring" = "gcr.io/my-dap-gcp-project/grid-monitoring:latest"
-    "grid-lens"       = "gcr.io/my-dap-gcp-project/grid-lens:latest"
-    "agent-1"         = "gcr.io/my-dap-gcp-project/agent-1:latest"
-    "agent-2"         = "gcr.io/my-dap-gcp-project/agent-2:latest"
+    "agent-registry"  = "gcr.io/project-ddfa7a80-7677-4268-95a/agent-registry:latest"
+    "agent-gateway"   = "gcr.io/project-ddfa7a80-7677-4268-95a/agent-gateway:latest"
+    "gatekeeper"      = "gcr.io/project-ddfa7a80-7677-4268-95a/gatekeeper:latest"
+    "mcp-gateway"     = "gcr.io/project-ddfa7a80-7677-4268-95a/mcp-gateway:latest"
+    "guardrails"      = "gcr.io/project-ddfa7a80-7677-4268-95a/guardrails:latest"
+    "grid-monitoring" = "gcr.io/project-ddfa7a80-7677-4268-95a/grid-monitoring:latest"
+    "grid-lens"       = "gcr.io/project-ddfa7a80-7677-4268-95a/grid-lens:latest"
+    "agent-1"         = "gcr.io/project-ddfa7a80-7677-4268-95a/agent-1:latest"
+    "agent-2"         = "gcr.io/project-ddfa7a80-7677-4268-95a/agent-2:latest"
   }
 }

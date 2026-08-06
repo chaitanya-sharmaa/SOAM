@@ -17,8 +17,8 @@ locals {
 remote_state {
   backend = "gcs"
   config = {
-    bucket   = "${local.project_id}-tfstate-${local.environment}"
-    prefix   = "terragrunt/${path_relative_to_include()}/terraform.tfstate"
+    bucket   = "${local.project_id}-dap-tfstate"
+    prefix   = "terragrunt/${local.environment}/${path_relative_to_include()}/terraform.tfstate"
     project  = local.project_id
     location = local.region
   }
