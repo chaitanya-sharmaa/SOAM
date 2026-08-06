@@ -109,16 +109,10 @@ locals {
   # Cloud SQL Compute Tier
   db_tier = "db-custom-2-7680"
 
-  # Cloud Run Container Image Tags
-  image_tags = {
-    agent_1         = "latest"
-    agent_2         = "latest"
-    agent_gateway   = "latest"
-    gatekeeper      = "latest"
-    mcp_gateway     = "latest"
-    guardrails      = "latest"
-    grid_monitoring = "latest"
-    grid_lens       = "latest"
+  # SOAM Agent Container Images in Google Artifact Registry
+  container_images = {
+    "agent-1" = "europe-west1-docker.pkg.dev/YOUR_GCP_DEV_PROJECT_ID/cloud-run-source-deploy/dev-dap-agent-1:latest"
+    "agent-2" = "europe-west1-docker.pkg.dev/YOUR_GCP_DEV_PROJECT_ID/cloud-run-source-deploy/dev-dap-agent-2:latest"
   }
 }
 ```
@@ -231,16 +225,16 @@ Run the included automated verification script to validate all 7 layers (VPC, KM
 PROJECT_ID="YOUR_GCP_PROJECT_ID"
 REGION="europe-west1"
 
-# 1. Verify Cloud Run Microservices (9 services)
+# 1. Verify Cloud Run Microservices (Agent 1 Coordinator & Agent 2 Worker)
 gcloud run services list --project="${PROJECT_ID}" --region="${REGION}"
 
-# 2. Verify Direct VPC Egress configuration on Cloud Run
-gcloud run services describe dev-dap-agent-gateway \
+# 2. Verify Direct VPC Egress configuration on Agent 1 & Agent 2
+gcloud run services describe dev-dap-agent-1 \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
   --format="yaml(spec.template.spec.vpcAccess,spec.template.metadata.annotations)"
 
-# 3. Verify Cloud SQL Private IP Instances (Registry + SOAM Gateway)
+# 3. Verify Cloud SQL Private IP Instance
 gcloud sql instances list --project="${PROJECT_ID}"
 
 # 4. Verify Pub/Sub SOAM Topics and DLQ
