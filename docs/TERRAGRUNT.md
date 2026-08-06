@@ -185,7 +185,7 @@ inputs = {
 
 ### Deploy / Plan Entire Environment
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 
 # 1. Print and inspect the dependency tree
 terragrunt dag graph
@@ -199,7 +199,7 @@ terragrunt run --all apply
 
 ### Iterate on a Single Module (Reduced Blast Radius)
 ```bash
-cd gcp/live/dev/05_compute_services
+cd infra/live/dev/05_compute_services
 
 terragrunt plan
 terragrunt apply
@@ -207,7 +207,7 @@ terragrunt apply
 
 ### Destroy / Teardown
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt run --all destroy
 ```
 
@@ -222,7 +222,7 @@ The pipeline at `.github/workflows/terragrunt-gcp.yml` implements automated GitO
    - PR to **`staging`** ➔ Plans only **`staging`**
    - PR to **`main`** ➔ Plans only **`prod`**
 2. **Continuous Deployment (Auto-Apply)**:
-   - Merge to **`develop`** ➔ Applies `gcp/live/dev`
-   - Merge to **`staging`** ➔ Applies `gcp/live/staging`
-   - Merge to **`main`** ➔ Applies `gcp/live/prod`
+   - Merge to **`develop`** ➔ Applies `infra/live/dev`
+   - Merge to **`staging`** ➔ Applies `infra/live/staging`
+   - Merge to **`main`** ➔ Applies `infra/live/prod` (requires manual review)
 3. **Manual Dispatch**: Select environment and action (`plan`, `apply`, `destroy`) directly from GitHub Actions UI.

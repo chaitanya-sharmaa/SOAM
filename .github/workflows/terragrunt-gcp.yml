@@ -7,7 +7,8 @@ on:
       - staging
       - develop
     paths:
-      - "gcp/**"
+      - "infra/**"
+      - "apps/**"
       - ".github/workflows/terragrunt-gcp.yml"
   pull_request:
     branches:
@@ -15,7 +16,8 @@ on:
       - staging
       - develop
     paths:
-      - "gcp/**"
+      - "infra/**"
+      - "apps/**"
       - ".github/workflows/terragrunt-gcp.yml"
   workflow_dispatch:
     inputs:
@@ -107,12 +109,12 @@ jobs:
           terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Validate Dependency DAG"
-        working-directory: "gcp/live/${{ needs.determine-env.outputs.target_env }}"
+        working-directory: "infra/live/${{ needs.determine-env.outputs.target_env }}"
         run: terragrunt dag graph
 
       - name: "Terragrunt Plan All"
         id: tg_plan
-        working-directory: "gcp/live/${{ needs.determine-env.outputs.target_env }}"
+        working-directory: "infra/live/${{ needs.determine-env.outputs.target_env }}"
         run: |
           terragrunt run --all plan --non-interactive
 
@@ -147,7 +149,7 @@ jobs:
           terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Terragrunt Apply All (Dev)"
-        working-directory: "gcp/live/dev"
+        working-directory: "infra/live/dev"
         run: terragrunt run --all apply --non-interactive
 
   # ==============================================================================
@@ -181,7 +183,7 @@ jobs:
           terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Terragrunt Apply All (Staging)"
-        working-directory: "gcp/live/staging"
+        working-directory: "infra/live/staging"
         run: terragrunt run --all apply --non-interactive
 
   # ==============================================================================
@@ -215,7 +217,7 @@ jobs:
           terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Terragrunt Apply All (Prod)"
-        working-directory: "gcp/live/prod"
+        working-directory: "infra/live/prod"
         run: terragrunt run --all apply --non-interactive
 
   # ==============================================================================
@@ -249,6 +251,6 @@ jobs:
           terragrunt-version: ${{ env.TG_VERSION }}
 
       - name: "Execute Terragrunt Action"
-        working-directory: "gcp/live/${{ inputs.environment }}"
+        working-directory: "infra/live/${{ inputs.environment }}"
         run: |
           terragrunt run --all ${{ inputs.action }} --non-interactive

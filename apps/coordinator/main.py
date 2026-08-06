@@ -1,6 +1,6 @@
 """
 Enterprise SOAM Multi-Agent Platform
-Agent 1 — SOAM Coordinator & Primary Reasoning Engine (Powered by Google Vertex AI Gemini 1.5 Flash)
+Agent 1 — SOAM Coordinator & Primary Reasoning Engine (Powered by Google Gemini 1.5 Flash)
 """
 
 import os
@@ -21,6 +21,7 @@ REGION = os.environ.get("REGION", "europe-west1")
 AGENT_2_TOPIC = os.environ.get("AGENT_2_TOPIC", "dev-dap-agent-2-inbound-topic")
 PORT = int(os.environ.get("PORT", "8080"))
 GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 
 def get_gcp_access_token():
@@ -38,18 +39,35 @@ def get_gcp_access_token():
         return None
 
 
-def call_vertex_gemini(prompt: str, system_instruction: str = None, temperature: float = 0.2) -> dict:
-    """Invokes Google Vertex AI Gemini 1.5 Flash via Native REST API with ADC."""
+def get_secret_manager_api_key():
+    """Fetches Gemini API key from Secret Manager vault if available."""
+    global GEMINI_API_KEY
+    if GEMINI_API_KEY and GEMINI_API_KEY != "initial_placeholder_secret_value":
+        return GEMINI_API_KEY
+
     token = get_gcp_access_token()
     if not token:
-        logger.info("Local environment: Simulating Gemini LLM inference")
-        return {
-            "status": "SIMULATED",
-            "model": f"{GEMINI_MODEL} (Local Simulation)",
-            "text": "Simulated local LLM response."
-        }
+        return None
 
-    vertex_url = f"https://{REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{REGION}/publishers/google/models/{GEMINI_MODEL}:generateContent"
+    secret_url = f"https://secretmanager.googleapis.com/v1/projects/{PROJECT_ID}/secrets/dev-dap-llm-api-token/versions/latest:access"
+    req = url_request.Request(secret_url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with url_request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode())
+            payload_b64 = data.get("payload", {}).get("data", "")
+            if payload_b64:
+                secret_val = base64.b64decode(payload_b64).decode("utf-8").strip()
+                if secret_val and secret_val != "initial_placeholder_secret_value":
+                    GEMINI_API_KEY = secret_val
+                    return secret_val
+    except Exception as e:
+        logger.warning(f"Could not load Gemini API key from Secret Manager: {e}")
+    return None
+
+
+def call_gemini_llm(prompt: str, system_instruction: str = None, temperature: float = 0.2) -> dict:
+    """Invokes Google Gemini 1.5 Flash via Google AI Studio API or Vertex AI ADC."""
+    api_key = get_secret_manager_api_key()
 
     payload = {
         "contents": [
@@ -70,34 +88,63 @@ def call_vertex_gemini(prompt: str, system_instruction: str = None, temperature:
             "parts": [{"text": system_instruction}]
         }
 
-    req = url_request.Request(
-        vertex_url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        },
-        method="POST"
-    )
+    # Approach A: Google AI Studio Gemini API (100% Free Tier rate limit, works with API key)
+    if api_key:
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={api_key}"
+        req = url_request.Request(
+            api_url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with url_request.urlopen(req, timeout=12) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+                candidates = resp_data.get("candidates", [])
+                if candidates and "content" in candidates[0]:
+                    parts = candidates[0]["content"].get("parts", [])
+                    if parts and "text" in parts[0]:
+                        raw_text = parts[0]["text"]
+                        logger.info("Successfully received live response from Google Gemini 1.5 Flash API")
+                        return {
+                            "status": "SUCCESS",
+                            "model": f"{GEMINI_MODEL} (Google AI Studio)",
+                            "raw_text": raw_text
+                        }
+        except Exception as e:
+            logger.warning(f"Google AI Studio Gemini API call failed: {e}")
 
-    try:
-        with url_request.urlopen(req, timeout=12) as resp:
-            resp_data = json.loads(resp.read().decode("utf-8"))
-            candidates = resp_data.get("candidates", [])
-            if candidates and "content" in candidates[0]:
-                parts = candidates[0]["content"].get("parts", [])
-                if parts and "text" in parts[0]:
-                    raw_text = parts[0]["text"]
-                    logger.info("Successfully received live response from Vertex AI Gemini 1.5 Flash")
-                    return {
-                        "status": "SUCCESS",
-                        "model": GEMINI_MODEL,
-                        "raw_text": raw_text
-                    }
-            return {"status": "NO_CONTENT", "model": GEMINI_MODEL, "raw_text": "{}"}
-    except Exception as e:
-        logger.warning(f"Vertex AI Gemini call failed, falling back to heuristic engine: {e}")
-        return {"status": "FALLBACK", "model": "heuristic-engine", "error": str(e)}
+    # Approach B: Vertex AI ADC
+    token = get_gcp_access_token()
+    if token:
+        vertex_url = f"https://{REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{REGION}/publishers/google/models/{GEMINI_MODEL}:generateContent"
+        req = url_request.Request(
+            vertex_url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        try:
+            with url_request.urlopen(req, timeout=12) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+                candidates = resp_data.get("candidates", [])
+                if candidates and "content" in candidates[0]:
+                    parts = candidates[0]["content"].get("parts", [])
+                    if parts and "text" in parts[0]:
+                        raw_text = parts[0]["text"]
+                        logger.info("Successfully received live response from Vertex AI Gemini 1.5 Flash")
+                        return {
+                            "status": "SUCCESS",
+                            "model": f"{GEMINI_MODEL} (Vertex AI)",
+                            "raw_text": raw_text
+                        }
+        except Exception as e:
+            logger.warning(f"Vertex AI Gemini call returned: {e}")
+
+    return {"status": "FALLBACK", "model": "heuristic-engine"}
 
 
 def publish_to_agent_2(subtask_payload: dict, parent_trace_id: str) -> dict:
@@ -153,7 +200,7 @@ def publish_to_agent_2(subtask_payload: dict, parent_trace_id: str) -> dict:
 
 
 def reason_and_plan(task_text: str, session_id: str, force_delegate: bool = False) -> dict:
-    """Core AI Reasoning Loop for Agent 1 using Vertex AI Gemini 1.5 Flash."""
+    """Core AI Reasoning Loop for Agent 1."""
     trace_id = f"trace-{uuid.uuid4().hex[:8]}"
     start_time = time.time()
 
@@ -172,9 +219,8 @@ def reason_and_plan(task_text: str, session_id: str, force_delegate: bool = Fals
 
     user_prompt = f"User Request: {task_text}\nSession ID: {session_id}\nForce Delegate: {force_delegate}"
 
-    llm_result = call_vertex_gemini(user_prompt, system_prompt, temperature=0.2)
+    llm_result = call_gemini_llm(user_prompt, system_prompt, temperature=0.2)
     
-    # Parse LLM response or fallback
     parsed_llm = None
     if llm_result.get("status") == "SUCCESS" and "raw_text" in llm_result:
         try:
@@ -187,7 +233,7 @@ def reason_and_plan(task_text: str, session_id: str, force_delegate: bool = Fals
         needs_delegation = force_delegate or bool(parsed_llm.get("needs_delegation", False))
         thought_process = parsed_llm.get("thought_steps", [
             f"1. Ingested user task: '{task_text[:60]}...'",
-            f"2. Vertex AI Gemini classified intent as [{intent}].",
+            f"2. Gemini classified intent as [{intent}].",
             f"3. Determined session context [{session_id}] with trace [{trace_id}]."
         ])
         subtask_name = parsed_llm.get("subtask_name", "Specialist Deep Analysis")
@@ -252,7 +298,7 @@ def reason_and_plan(task_text: str, session_id: str, force_delegate: bool = Fals
     return {
         "agent": "dev-dap-agent-1",
         "role": "SOAM Coordinator & Reasoning Engine",
-        "llm_engine": llm_result.get("model", GEMINI_MODEL),
+        "llm_engine": llm_result.get("model", "heuristic-engine"),
         "trace_id": trace_id,
         "session_id": session_id,
         "intent": intent,
@@ -290,7 +336,6 @@ class AgentHandler(BaseHTTPRequestHandler):
         except Exception:
             body_json = {}
 
-        # Handle Pub/Sub Push format if received
         if "message" in body_json and "data" in body_json["message"]:
             try:
                 decoded_data = base64.b64decode(body_json["message"]["data"]).decode("utf-8")
@@ -314,5 +359,5 @@ class AgentHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = HTTPServer(("", PORT), AgentHandler)
-    logger.info(f"🚀 SOAM Coordinator Agent 1 running on port {PORT} with {GEMINI_MODEL}")
+    logger.info(f"🚀 SOAM Coordinator Agent 1 running on port {PORT}")
     server.serve_forever()

@@ -39,7 +39,7 @@ gcloud auth application-default login
 
 ## 🚀 Step 1: One-Time Bootstrap (WIF & Remote State Buckets)
 
-The `gcp/bootstrap` directory contains a standalone Terraform root module that provisions the foundational resources required by CI/CD and Terragrunt before any application infrastructure is deployed:
+The `infra/bootstrap` directory contains a standalone Terraform root module that provisions the foundational resources required by CI/CD and Terragrunt before any application infrastructure is deployed:
 
 * **Remote State GCS Buckets**: Versioned, encrypted buckets (`${project_id}-tfstate-dev`, `${project_id}-tfstate-staging`, `${project_id}-tfstate-prod`).
 * **CI/CD Service Account**: `sa-dap-tf-provisioner@<project_id>.iam.gserviceaccount.com` with least-privilege administrative IAM roles.
@@ -48,7 +48,7 @@ The `gcp/bootstrap` directory contains a standalone Terraform root module that p
 ### Provision Bootstrap
 
 ```bash
-cd gcp/bootstrap
+cd infra/bootstrap
 
 # 1. Initialize Terraform
 terraform init
@@ -94,9 +94,9 @@ In your GitHub repository:
 
 ## ⚙️ Step 3: Configure Environment Variables (`env.hcl`)
 
-Update `gcp/live/<env>/env.hcl` for each environment (`dev`, `staging`, `prod`) to set project IDs, network CIDRs, and database sizing.
+Update `infra/live/<env>/env.hcl` for each environment (`dev`, `staging`, `prod`) to set project IDs, network CIDRs, and database sizing.
 
-### Example: `gcp/live/dev/env.hcl`
+### Example: `infra/live/dev/env.hcl`
 ```hcl
 locals {
   environment = "dev"
@@ -139,7 +139,7 @@ Dependency Execution Hierarchy:
 
 ### 1. Inspect Dependency Graph
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 
 # Visualize the module DAG
 terragrunt dag graph
@@ -148,14 +148,14 @@ terragrunt dag graph
 ### 2. Full Environment Plan
 Run a plan across all 7 modules in strict topological dependency order:
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt run --all plan
 ```
 
 ### 3. Full Environment Apply
 Deploy the complete 7-module platform:
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt run --all apply --non-interactive
 ```
 
@@ -163,7 +163,7 @@ terragrunt run --all apply --non-interactive
 When working on a specific layer, navigate directly to that unit:
 ```bash
 # Example: Apply changes only to compute services
-cd gcp/live/dev/05_compute_services
+cd infra/live/dev/05_compute_services
 terragrunt plan
 terragrunt apply
 ```
@@ -171,7 +171,7 @@ terragrunt apply
 ### 5. Tear Down / Destroy Environment
 To safely destroy all resources in reverse topological dependency order:
 ```bash
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt run --all destroy --non-interactive
 ```
 
@@ -217,10 +217,10 @@ Run the included automated verification script to validate all 7 layers (VPC, KM
 
 ```bash
 # Run against the default project and dev environment
-./gcp/scripts/test_e2e.sh
+./scripts/test_e2e.sh
 
 # Or customize with flags:
-./gcp/scripts/test_e2e.sh --project "YOUR_GCP_PROJECT_ID" --region "europe-west1" --env "dev"
+./scripts/test_e2e.sh --project "YOUR_GCP_PROJECT_ID" --region "europe-west1" --env "dev"
 ```
 
 ---
@@ -267,7 +267,7 @@ gcloud compute routers nats list --router=dev-dap-router --region="${REGION}" --
 * **Resolution**:
   1. Run the bootstrap step first:
      ```bash
-     cd gcp/bootstrap && terraform apply
+     cd infra/bootstrap && terraform apply
      ```
   2. Or manually create the missing bucket via `gcloud`:
      ```bash
@@ -289,13 +289,13 @@ gcloud compute routers nats list --router=dev-dap-router --region="${REGION}" --
 * **Root Cause**: High Cloud Run concurrency or scale-out exhausts available IPs in `snet-private-workload`.
 * **Resolution**: Ensure subnet sizes are sized appropriately:
   * `dev` / `staging`: `/24` (254 IPs)
-  * `prod`: `/22` (1022 IPs) configured in `gcp/live/prod/env.hcl`.
+  * `prod`: `/22` (1022 IPs) configured in `infra/live/prod/env.hcl`.
 
 ### 5. Stale Terragrunt Cache
 * **Root Cause**: Corrupted `.terragrunt-cache` or changed provider/module sources.
 * **Resolution**: Clear all local cache folders:
   ```bash
-  find gcp/live -type d -name ".terragrunt-cache" -prune -exec rm -rf {} +
+  find infra/live -type d -name ".terragrunt-cache" -prune -exec rm -rf {} +
   ```
 
 ---

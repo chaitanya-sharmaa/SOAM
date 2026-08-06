@@ -44,39 +44,47 @@
 ## 📁 Repository Structure
 
 ```text
-cloud-run/
+SOAM/
 ├── .github/
 │   └── workflows/
 │       └── terragrunt-gcp.yml        # GitOps CI/CD: WIF auth, plan/apply/destroy per env
 │
-├── gcp/
+├── apps/                             # Application Microservices & AI Agent Logic
+│   ├── coordinator/                  # Agent 1: Coordinator & Reasoning Engine (Gemini 1.5 Flash)
+│   │   ├── Dockerfile
+│   │   └── main.py
+│   └── worker/                       # Agent 2: Specialist Worker & Diagnostics Engine
+│       ├── Dockerfile
+│       └── main.py
+│
+├── infra/                            # Infrastructure as Code (Terraform + Terragrunt)
 │   ├── bootstrap/                    # One-time: WIF setup & GCS remote state bucket
 │   │
 │   ├── live/                         # Terragrunt live environments
 │   │   ├── root.hcl                  # Global: GCS remote state, provider, WIF
-│   │   │
-│   │   ├── dev/                      # 🧪 Dev  — project: my-dap-dev    | subnet: 10.10.1.0/24
-│   │   ├── staging/                  # 🚀 Staging — project: my-dap-staging | subnet: 10.20.1.0/24
-│   │   └── prod/                     # 🛡️  Prod  — project: my-dap-prod  | subnet: 10.30.1.0/22 (HA)
+│   │   ├── dev/                      # 🧪 Dev  — project: dev-dap    | subnet: 10.10.1.0/24
+│   │   ├── staging/                  # 🚀 Staging — project: staging-dap | subnet: 10.20.1.0/24
+│   │   └── prod/                     # 🛡️  Prod  — project: prod-dap  | subnet: 10.30.1.0/22 (HA)
 │   │       └── [01..07]/terragrunt.hcl
 │   │
-│   ├── modules/                      # Reusable Terraform modules (source of truth)
-│   │   ├── 01_networking/            # VPC, snet-private-workload, PSA, Cloud NAT (static IP), Cloud Armor
-│   │   ├── 02_security_iam/          # Service Accounts, IAM roles, Cloud KMS CMEK, Secret Manager
-│   │   ├── 03_data_state/            # Cloud SQL ×2 (Registry + SOAM), Firestore, BigQuery CTT
-│   │   ├── 04_messaging/             # SOAM Pub/Sub topics, DLQ (7-day), push subscriptions
-│   │   ├── 05_compute_services/      # Cloud Run v2 (9 services), Direct VPC Egress, min_instance_count ≥ 1
-│   │   ├── 06_ingress_gateway/       # Cloud API Gateway + Google IAM / Google OIDC JWT OpenAPI spec
-│   │   └── 07_observability/         # 365-day immutable audit log bucket, Logging sinks, Alerts
-│   │
-│   └── docs/
-│       ├── ARCHITECTURE.md           # Full architecture: SOAM, VPC, hops, module map
-│       ├── TERRAGRUNT.md             # Terragrunt guide, DAG, CLI cheat sheet
-│       ├── RUNBOOK.md                # Step-by-step deployment & operational runbook
-│       ├── soam_minimal_architecture_diagram.png
-│       ├── gcp_vpc_network_diagram.png
-│       ├── gcp_hop_by_hop_diagram.png
-│       └── terragrunt_multienv_cicd_diagram.png
+│   └── modules/                      # Reusable Terraform modules (source of truth)
+│       ├── 01_networking/            # VPC, snet-private-workload, PSA, Cloud NAT (static IP)
+│       ├── 02_security_iam/          # Service Accounts, IAM roles, Secret Manager
+│       ├── 03_data_state/            # Cloud SQL (Private IP), Firestore, BigQuery
+│       ├── 04_messaging/             # SOAM Pub/Sub topics, DLQ, push subscriptions
+│       ├── 05_compute_services/      # Cloud Run v2 (2-Agent Mesh), Direct VPC Egress
+│       ├── 06_ingress_gateway/       # Cloud API Gateway + Google IAM OIDC OpenAPI spec
+│       └── 07_observability/         # BigQuery telemetry dataset, Logging sinks, Alerts
+│
+├── scripts/                          # Operational & Validation Tooling
+│   ├── live_platform_deep_test.sh    # Deep-dive 8-layer test with live log streaming
+│   ├── test_e2e.sh                   # Comprehensive regression validation
+│   └── verify_agent_delegation.sh    # Pub/Sub delegation verification
+│
+├── docs/                             # Architecture Specs, Blueprints & Runbooks
+│   ├── ARCHITECTURE.md               # Full architecture: SOAM, VPC, hops, module map
+│   ├── TERRAGRUNT.md                 # Terragrunt guide, DAG, CLI cheat sheet
+│   └── RUNBOOK.md                    # Step-by-step deployment & operational runbook
 │
 └── README.md
 ```
@@ -89,24 +97,20 @@ SOAM is the core orchestration pattern of this platform — an **async-first, ev
 
 ```text
 Client
-  └─→ Cloud Armor WAF
-        └─→ Cloud API Gateway (Google IAM / OIDC JWT)
-              └─→ Agent 1 (Coordinator)
-                    │
-                    ├─ Lightweight? ─────────────────────────→ Sync HTTP response
-                    │
-                    └─ Complex task? ──→ [agent-2-inbound-topic]
-                                              │
-                                     [Agent 2 (Worker)]
-                                              │ PASS
-                                    [agent-1-inbound-topic]
-                                              │
-                                    Agent 1 (Cloud Run)
-                                      ├─→ Firestore  (PGA — Zero NAT)
-                                      ├─→ Cloud SQL  (PSA Peering)
-                                      ├─→ MCP Gateway → Cloud NAT → External APIs
-                                      ├─→ BigQuery CTT (PGA — Zero NAT)
-                                      └─→ Agent 2  (via SOAM bus — Multi-Agent)
+  └─→ Cloud API Gateway (Google IAM / OIDC JWT)
+        └─→ Agent 1 (Coordinator Powered by Gemini 1.5 Flash)
+              │
+              ├─ Direct Synthesis? ─────────────────────────→ Sync HTTP response
+              │
+              └─ Specialist Task? ──→ [agent-2-inbound-topic]
+                                        │
+                               [Agent 2 (Worker Powered by Gemini)]
+                                        │
+                               Agent 2 (Cloud Run)
+                                 ├─→ Cloud SQL  (100% Private PSA Peering)
+                                 ├─→ Firestore  (PGA — Zero NAT)
+                                 ├─→ Cloud NAT  (Static Outbound IP)
+                                 └─→ BigQuery   (Telemetry Dataset)
 ```
 
 ---
@@ -131,18 +135,18 @@ Client
 
 ```bash
 # Plan the full dev environment (topological order, all 7 modules)
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt run --all plan
 
 # Apply dev end-to-end
 terragrunt run --all apply
 
-# Target a single module
-cd gcp/live/dev/05_compute_services
-terragrunt apply
+# Run the live 8-layer deep platform verification suite
+cd scripts
+./live_platform_deep_test.sh
 
 # View module dependency graph
-cd gcp/live/dev
+cd infra/live/dev
 terragrunt dag graph
 ```
 
@@ -152,6 +156,6 @@ terragrunt dag graph
 
 | Document | Description |
 | :--- | :--- |
-| [`gcp/docs/ARCHITECTURE.md`](gcp/docs/ARCHITECTURE.md) | Full architecture: SOAM, VPC topology, hop-by-hop lifecycle, module map |
-| [`gcp/docs/TERRAGRUNT.md`](gcp/docs/TERRAGRUNT.md) | Terragrunt deep-dive, DAG, CLI cheat sheet |
-| [`gcp/docs/RUNBOOK.md`](gcp/docs/RUNBOOK.md) | Step-by-step deployment & operational runbook |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Full architecture: SOAM, VPC topology, hop-by-hop lifecycle, module map |
+| [`docs/TERRAGRUNT.md`](docs/TERRAGRUNT.md) | Terragrunt deep-dive, DAG, CLI cheat sheet |
+| [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | Step-by-step deployment & operational runbook |
