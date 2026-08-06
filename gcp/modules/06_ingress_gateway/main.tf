@@ -1,23 +1,8 @@
-# ==============================================================================
-# Module: 06_ingress_gateway
-# Google Cloud API Gateway with Native Google IAM / OIDC Authentication
-# ==============================================================================
-
-# 1. Service Account for API Gateway
-resource "google_service_account" "api_gateway_sa" {
-  account_id   = "sa-${var.environment}-api-gateway"
-  display_name = "SOAM API Gateway Service Account"
-  project      = var.project_id
+locals {
+  api_gateway_sa_email = var.api_gateway_sa_email != "" ? var.api_gateway_sa_email : "sa-${var.environment}-api-gateway@${var.project_id}.iam.gserviceaccount.com"
 }
 
-# Grant API Gateway permission to invoke Cloud Run backends
-resource "google_project_iam_member" "api_gateway_run_invoker" {
-  project = var.project_id
-  role    = "roles/run.invoker"
-  member  = "serviceAccount:${google_service_account.api_gateway_sa.email}"
-}
-
-# 2. Cloud API Gateway Definition
+# 1. Cloud API Gateway Definition
 resource "google_api_gateway_api" "dap_api" {
   provider     = google-beta
   api_id       = "${var.environment}-dap-api"
@@ -46,7 +31,7 @@ resource "google_api_gateway_api_config" "dap_api_cfg" {
 
   gateway_config {
     backend_config {
-      google_service_account = google_service_account.api_gateway_sa.email
+      google_service_account = local.api_gateway_sa_email
     }
   }
 

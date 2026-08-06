@@ -30,3 +30,9 @@ variable "google_audiences" {
   type        = string
   default     = "32555940559.apps.googleusercontent.com"
 }
+
+variable "api_gateway_sa_email" {
+  description = "Dedicated Service Account email for API Gateway"
+  type        = string
+  default     = ""
+}

@@ -19,6 +19,21 @@ resource "google_service_account" "service_accounts" {
   project      = var.project_id
 }
 
+# 1b. Create Dedicated Service Account for API Gateway
+resource "google_service_account" "api_gateway_sa" {
+  account_id   = "sa-${var.environment}-api-gateway"
+  display_name = "SOAM API Gateway Service Account"
+  description  = "Dedicated service account for API Gateway to invoke Cloud Run agents"
+  project      = var.project_id
+}
+
+# Grant API Gateway permission to invoke Cloud Run backends
+resource "google_project_iam_member" "api_gateway_run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.api_gateway_sa.email}"
+}
+
 # 2. Grant Vertex AI User & Gemini access to Agents
 resource "google_project_iam_member" "vertex_ai_access" {
   for_each = toset(local.services)
