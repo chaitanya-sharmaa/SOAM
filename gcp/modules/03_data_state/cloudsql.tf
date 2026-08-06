@@ -13,9 +13,9 @@ resource "google_sql_database_instance" "agent_registry_db" {
   settings {
     tier              = var.db_tier
     availability_type = var.environment == "prod" ? "REGIONAL" : "ZONAL"
-    disk_size         = 20
+    disk_size         = 10
     disk_type         = "PD_SSD"
-    disk_autoresize   = true
+    disk_autoresize   = false
 
     ip_configuration {
       ipv4_enabled    = false # Zero Public IP
@@ -61,9 +61,9 @@ resource "google_sql_database_instance" "agent_gateway_db" {
   settings {
     tier              = var.db_tier
     availability_type = var.environment == "prod" ? "REGIONAL" : "ZONAL"
-    disk_size         = 20
+    disk_size         = 10
     disk_type         = "PD_SSD"
-    disk_autoresize   = true
+    disk_autoresize   = false
 
     ip_configuration {
       ipv4_enabled    = false # Zero Public IP

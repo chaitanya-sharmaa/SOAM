@@ -15,7 +15,9 @@ terraform {
 }
 
 dependency "compute" {
-  config_path = "../05_compute_services"
+  config_path                             = "../05_compute_services"
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     agent_gateway_uri  = "https://dev-dap-agent-gateway-xyz.europe-west1.run.app"
     agent_registry_uri = "https://dev-dap-agent-registry-xyz.europe-west1.run.app"

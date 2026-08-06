@@ -4,21 +4,42 @@
 # ==============================================================================
 
 # 1. Dedicated Long-Term Audit Log Bucket (365 Days Retention)
-resource "google_logging_project_bucket_config" "audit_bucket" {
-  project        = var.project_id
-  location       = var.region
-  bucket_id      = "${var.environment}-dap-audit-logs-bucket"
-  retention_days = 365
-  description    = "Centralized immutable audit log bucket for DAP platform compliance."
+# 1. Dedicated Long-Term Audit Log Bucket (365 Days Retention)
+resource "google_storage_bucket" "audit_bucket" {
+  name                        = "${var.project_id}-${var.environment}-dap-audit-logs"
+  location                    = var.region
+  project                     = var.project_id
+  uniform_bucket_level_access = true
+  force_destroy               = true
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 365
+    }
+  }
 }
 
 # 2. Log Sink for Security & GateKeeper Audit Logs
 resource "google_logging_project_sink" "audit_sink" {
-  name                   = "${var.environment}-dap-audit-sink"
-  project                = var.project_id
-  destination            = "logging.googleapis.com/${google_logging_project_bucket_config.audit_bucket.id}"
-  filter                 = "resource.type=\"cloud_run_revision\" AND jsonPayload.audit_id:* OR protoPayload.serviceName=\"cloudarmor.googleapis.com\""
+  name        = "${var.environment}-dap-audit-sink"
+  project     = var.project_id
+  destination = "storage.googleapis.com/${google_storage_bucket.audit_bucket.name}"
+  filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.audit_id:* OR protoPayload.serviceName=\"cloudarmor.googleapis.com\""
+
   unique_writer_identity = true
+}
+
+resource "google_storage_bucket_iam_member" "sink_writer" {
+  bucket = google_storage_bucket.audit_bucket.name
+  role   = "roles/storage.objectCreator"
+  member = google_logging_project_sink.audit_sink.writer_identity
 }
 
 # 3. Alert Policy: Dead Letter Queue (DLQ) Not Empty Alert

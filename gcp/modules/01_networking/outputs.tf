@@ -23,11 +23,6 @@ output "nat_static_ip" {
   value       = google_compute_address.nat_static_ip.address
 }
 
-output "security_policy_id" {
-  description = "The ID of the Cloud Armor INT WAF security policy"
-  value       = google_compute_security_policy.int_waf_policy.id
-}
-
 output "private_vpc_connection" {
   description = "The private service networking connection resource (for dependency chaining with Cloud SQL)"
   value       = google_service_networking_connection.private_vpc_connection.id

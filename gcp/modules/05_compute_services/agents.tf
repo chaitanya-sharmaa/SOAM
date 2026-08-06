@@ -17,8 +17,8 @@ resource "google_cloud_run_v2_service" "agent_1" {
     service_account = var.service_account_emails["agent-1"]
 
     scaling {
-      min_instance_count = var.environment == "prod" ? 2 : 1
-      max_instance_count = 10
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     # Direct VPC Egress: Cloud Run instance IPs come from snet-private-workload
@@ -37,8 +37,8 @@ resource "google_cloud_run_v2_service" "agent_1" {
 
       resources {
         limits = {
-          cpu    = "2"
-          memory = "4Gi"
+          cpu    = "1"
+          memory = "512Mi"
         }
       }
 
@@ -114,8 +114,8 @@ resource "google_cloud_run_v2_service" "agent_2" {
     service_account = var.service_account_emails["agent-2"]
 
     scaling {
-      min_instance_count = var.environment == "prod" ? 2 : 1
-      max_instance_count = 10
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     vpc_access {
@@ -131,8 +131,8 @@ resource "google_cloud_run_v2_service" "agent_2" {
 
       resources {
         limits = {
-          cpu    = "2"
-          memory = "4Gi"
+          cpu    = "1"
+          memory = "512Mi"
         }
       }
 

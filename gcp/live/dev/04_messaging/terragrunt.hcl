@@ -11,7 +11,9 @@ terraform {
 }
 
 dependency "security" {
-  config_path = "../02_security_iam"
+  config_path                             = "../02_security_iam"
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     kms_keys = {
       pubsub = "projects/my-dap-gcp-project/locations/europe-west1/keyRings/dev-dap-keyring/cryptoKeys/key-pubsub"

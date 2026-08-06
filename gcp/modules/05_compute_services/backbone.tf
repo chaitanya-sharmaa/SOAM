@@ -16,8 +16,8 @@ resource "google_cloud_run_v2_service" "agent_registry" {
     service_account = var.service_account_emails["agent-registry"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 10
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     vpc_access {
@@ -60,8 +60,8 @@ resource "google_cloud_run_v2_service" "agent_gateway" {
     service_account = var.service_account_emails["agent-gateway"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 20
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     vpc_access {
@@ -108,8 +108,8 @@ resource "google_cloud_run_v2_service" "gatekeeper" {
     service_account = var.service_account_emails["gatekeeper"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 20
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     vpc_access {
@@ -184,8 +184,8 @@ resource "google_cloud_run_v2_service" "mcp_gateway" {
     service_account = var.service_account_emails["mcp-gateway"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 15
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     vpc_access {
@@ -216,8 +216,8 @@ resource "google_cloud_run_v2_service" "guardrails" {
     service_account = var.service_account_emails["guardrails"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 10
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     containers {
@@ -240,8 +240,8 @@ resource "google_cloud_run_v2_service" "grid_monitoring" {
     service_account = var.service_account_emails["grid-monitoring"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 5
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     containers {
@@ -268,8 +268,8 @@ resource "google_cloud_run_v2_service" "grid_lens" {
     service_account = var.service_account_emails["grid-lens"]
 
     scaling {
-      min_instance_count = 1
-      max_instance_count = 5
+      min_instance_count = 0
+      max_instance_count = 2
     }
 
     containers {

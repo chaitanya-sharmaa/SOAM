@@ -1,6 +1,6 @@
 output "audit_bucket_name" {
   description = "Name of the central audit log bucket"
-  value       = google_logging_project_bucket_config.audit_bucket.bucket_id
+  value       = google_storage_bucket.audit_bucket.name
 }
 
 output "dashboard_id" {
