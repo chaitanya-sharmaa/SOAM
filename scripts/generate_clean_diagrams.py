@@ -24,6 +24,268 @@ def render_html_to_png(html_content, output_png_path, width=1600, height=1200):
     print(f"Rendered: {output_png_path}")
 
 # ==============================================================================
+# Diagram 0: Comprehensive Network Connectivity & PKI Certificate Architecture
+# ==============================================================================
+HTML_NETWORK_CERTS = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { background: #ffffff; width: 1500px; height: 1120px; padding: 28px; display: flex; flex-direction: column; color: #1e293b; justify-content: space-between; }
+  
+  .header { text-align: center; margin-bottom: 16px; }
+  .header h1 { font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+  .header p { font-size: 14.5px; color: #64748b; margin-top: 4px; font-weight: 500; }
+  
+  .channels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  
+  .chan-card { background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  
+  .chan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .chan-title { font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  
+  .chan-body { font-size: 12px; color: #334155; line-height: 1.4; }
+  .chan-body code { background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-size: 11px; color: #0f172a; }
+  
+  .cert-box { margin-top: 8px; background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 8px; padding: 8px 10px; font-size: 11.5px; }
+  .cert-title { font-weight: 700; color: #0f172a; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  
+  .badge { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 8px; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-purple { background: #f3e8ff; color: #6b21a8; }
+  .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-teal { background: #ccfbf1; color: #115e59; }
+  .badge-rose { background: #ffe4e6; color: #9f1239; }
+  
+  .table-container { background: #ffffff; border-radius: 12px; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  th { background: #f1f5f9; color: #0f172a; font-weight: 700; text-align: left; padding: 8px 12px; border-bottom: 1.5px solid #cbd5e1; }
+  td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  
+  .footer-summary { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 14px; display: flex; justify-content: space-around; font-size: 11.5px; font-weight: 600; color: #475569; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>GCP DAP — Network Connectivity & PKI Certificate Architecture</h1>
+    <p>Comprehensive Map of Resource Connections, Protocols, Ports, and Certificate Origins</p>
+  </div>
+  
+  <div class="channels-grid">
+    <!-- Channel 1: Client to API Gateway -->
+    <div class="chan-card" style="border-color: #3b82f6;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #1d4ed8;"><span>🌐 1. Client ➔ Cloud API Gateway</span></div>
+          <span class="badge badge-blue">HTTPS / 443</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> External client invokes <code>https://dev-dap-gateway-*.gateway.dev</code>.<br>
+          • <strong>Auth:</strong> Google IAM OIDC Bearer Token in <code>Authorization</code> header.
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #93c5fd; background: #eff6ff;">
+        <div class="cert-title" style="color: #1e40af;">
+          <span>🔒 TLS Cert Origin:</span>
+          <span class="badge badge-blue">Google Trust Services (GTS CA 1C3)</span>
+        </div>
+        <div>• Managed SSL certificate automatically minted and rotated by Google on <code>*.gateway.dev</code>.<br>
+        • JWT signature verified by fetching JWKS from <code>https://www.googleapis.com/oauth2/v3/certs</code>.</div>
+      </div>
+    </div>
+    
+    <!-- Channel 2: API Gateway to Cloud Run Agent 1 -->
+    <div class="chan-card" style="border-color: #6366f1;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #4338ca;"><span>🛡️ 2. API Gateway ➔ Agent 1 (Coordinator)</span></div>
+          <span class="badge badge-indigo">Internal mTLS / 443</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> Gateway forwards validated traffic to Cloud Run URL.<br>
+          • <strong>Ingress:</strong> Agent 1 rejects direct public internet (<code>INTERNAL_ONLY</code>).
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #c7d2fe; background: #eef2ff;">
+        <div class="cert-title" style="color: #3730a3;">
+          <span>🔒 TLS Cert Origin:</span>
+          <span class="badge badge-purple">Google Borg ALTS / Internal CA</span>
+        </div>
+        <div>• Encrypted over Google's internal software-defined network via Application Layer Transport Security (ALTS).<br>
+        • Auth: Gateway mints OIDC token for <code>sa-dev-api-gateway</code> (roles/run.invoker).</div>
+      </div>
+    </div>
+    
+    <!-- Channel 3: Pub/Sub Async Backbone to Agent 2 -->
+    <div class="chan-card" style="border-color: #8b5cf6;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #6d28d9;"><span>⚡ 3. Pub/Sub Bus ➔ Agent 2 (Worker)</span></div>
+          <span class="badge badge-purple">OIDC Push / 443</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> Push Subscription pushes task from <code>agent-2-inbound-topic</code> to Agent 2.<br>
+          • <strong>Reliability:</strong> 300s ACK deadline, 5 retries, exponential backoff, DLQ hold.
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #ddd6fe; background: #faf5ff;">
+        <div class="cert-title" style="color: #5b21b6;">
+          <span>🔒 TLS Cert Origin:</span>
+          <span class="badge badge-purple">Google Internal Production CA</span>
+        </div>
+        <div>• Push payload encrypted in transit over Google internal TLS.<br>
+        • Auth: Pub/Sub mints Google IAM OIDC token for <code>sa-dev-ps-invoker</code> (roles/run.invoker).</div>
+      </div>
+    </div>
+    
+    <!-- Channel 4: Direct VPC Egress into Customer Subnet -->
+    <div class="chan-card" style="border-color: #10b981;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #047857;"><span>🔌 4. Cloud Run ➔ Customer VPC Subnet</span></div>
+          <span class="badge badge-green">Direct VPC Egress</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> Containers attach directly to <code>snet-private-workload</code> (10.10.1.0/24).<br>
+          • <strong>Zero VM Connectors:</strong> Eliminates e2-micro VMs, sub-2ms network routing.
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #a7f3d0; background: #f0fdf4;">
+        <div class="cert-title" style="color: #065f46;">
+          <span>🔒 Network Security:</span>
+          <span class="badge badge-green">VPC Subnet IP Leases</span>
+        </div>
+        <div>• Layer-3 packet encapsulation directly into customer VPC.<br>
+        • Governed by VPC Firewall Rule <code>allow-internal</code> (TCP 443, 5432, 8080).</div>
+      </div>
+    </div>
+    
+    <!-- Channel 5: Cloud SQL over PSA Peering -->
+    <div class="chan-card" style="border-color: #0d9488;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #0f766e;"><span>💾 5. Agents ➔ Cloud SQL PostgreSQL 15</span></div>
+          <span class="badge badge-teal">PSA Peering / 5432</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> Agents connect to <code>10.10.16.x</code> in Google Tenant VPC over PSA.<br>
+          • <strong>Zero Public IP:</strong> <code>ipv4_enabled = false</code> (No internet gateway exists on DB).
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #99f6e4; background: #f0fdfa;">
+        <div class="cert-title" style="color: #115e59;">
+          <span>🔒 TLS Cert Origin:</span>
+          <span class="badge badge-teal">Google Cloud SQL Managed Server CA</span>
+        </div>
+        <div>• Server TLS certificate issued by Google Cloud SQL Internal CA (<code>server-ca.pem</code>).<br>
+        • Auth: IAM DB Authentication / Cloud SQL Auth Proxy mints ephemeral 60-min client TLS certs.</div>
+      </div>
+    </div>
+    
+    <!-- Channel 6: Private Google Access (PGA) -->
+    <div class="chan-card" style="border-color: #f59e0b;">
+      <div>
+        <div class="chan-header">
+          <div class="chan-title" style="color: #b45309;"><span>☁️ 6. Agents ➔ Firestore, Secrets & BigQuery</span></div>
+          <span class="badge badge-amber">PGA VIPs / 443</span>
+        </div>
+        <div class="chan-body">
+          • <strong>Connection:</strong> Workload subnet routes to <code>*.googleapis.com</code> via PGA.<br>
+          • <strong>Route:</strong> Internal Google Private VIPs (<code>199.36.153.8/30</code>) bypassing Cloud NAT.
+        </div>
+      </div>
+      <div class="cert-box" style="border-color: #fde68a; background: #fffbeb;">
+        <div class="cert-title" style="color: #92400e;">
+          <span>🔒 TLS Cert Origin:</span>
+          <span class="badge badge-amber">Google Trust Services (GTS Root R1)</span>
+        </div>
+        <div>• Standard Google public CA certificates for <code>*.googleapis.com</code>.<br>
+        • Verified against Linux system root CA bundle (<code>/etc/ssl/certs/ca-certificates.crt</code>).</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Master PKI & Connectivity Reference Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Connection Path</th>
+          <th>Protocol & Port</th>
+          <th>Transport Security</th>
+          <th>Certificate Authority / Issuer</th>
+          <th>Identity & Auth Mechanism</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Client ➔ Cloud API Gateway</strong></td>
+          <td>HTTPS / 443</td>
+          <td>TLS 1.3</td>
+          <td><strong>Google Trust Services (GTS CA 1C3)</strong></td>
+          <td>Google IAM OIDC Bearer Token (JWKS validated)</td>
+        </tr>
+        <tr>
+          <td><strong>API Gateway ➔ Agent 1 Coordinator</strong></td>
+          <td>HTTP/2 over mTLS</td>
+          <td>Google ALTS / mTLS</td>
+          <td><strong>Google Borg Production Internal CA</strong></td>
+          <td>OIDC Token (<code>sa-dev-api-gateway</code>, roles/run.invoker)</td>
+        </tr>
+        <tr>
+          <td><strong>Pub/Sub Push ➔ Agent 2 Worker</strong></td>
+          <td>HTTPS / 443</td>
+          <td>Google Internal TLS</td>
+          <td><strong>Google Internal Production CA</strong></td>
+          <td>OIDC Token (<code>sa-dev-ps-invoker</code>, roles/run.invoker)</td>
+        </tr>
+        <tr>
+          <td><strong>Cloud Run ➔ Workload Subnet</strong></td>
+          <td>Direct VPC Egress</td>
+          <td>IP Encapsulation</td>
+          <td><strong>VPC Subnet IP Allocation (10.10.1.0/24)</strong></td>
+          <td>VPC Firewall Rule <code>allow-internal</code></td>
+        </tr>
+        <tr>
+          <td><strong>Agents ➔ Cloud SQL PostgreSQL</strong></td>
+          <td>TCP / 5432</td>
+          <td>TLS (verify-full / mTLS)</td>
+          <td><strong>Google Cloud SQL Managed Server CA</strong></td>
+          <td>IAM DB Auth / Ephemeral certs (60-min rotation)</td>
+        </tr>
+        <tr>
+          <td><strong>Agents ➔ Firestore / Secrets / BQ</strong></td>
+          <td>HTTPS / 443 (PGA)</td>
+          <td>TLS 1.3</td>
+          <td><strong>Google Trust Services (GTS Root R1)</strong></td>
+          <td>Google Workload Identity / Service Account IAM</td>
+        </tr>
+        <tr>
+          <td><strong>Agents ➔ External LLMs / SaaS</strong></td>
+          <td>HTTPS / 443 (Cloud NAT)</td>
+          <td>TLS 1.3</td>
+          <td><strong>Public Web PKI (DigiCert / Let's Encrypt)</strong></td>
+          <td>API Keys from Secret Manager + Static NAT IP (34.x.x.x)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="footer-summary">
+    <span>🔒 <strong>Edge & Public TLS:</strong> Google Trust Services (GTS)</span>
+    <span>🛡️ <strong>Internal Mesh:</strong> Google Borg ALTS mTLS</span>
+    <span>💾 <strong>Database:</strong> Cloud SQL Managed CA + Ephemeral IAM TLS</span>
+    <span>☁️ <strong>Google PaaS:</strong> Private Google Access (PGA)</span>
+  </div>
+</body>
+</html>
+"""
+
+# ==============================================================================
 # Diagram 1: Overall SOAM Architecture (Clear Boundary Separation)
 # ==============================================================================
 HTML_SOAM_ARCH = """<!DOCTYPE html>
@@ -877,6 +1139,7 @@ HTML_GATEWAY = """<!DOCTYPE html>
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
+    render_html_to_png(HTML_NETWORK_CERTS, os.path.join(OUTPUT_DIR, "network_connectivity_and_certs_diagram.png"), width=1500, height=1120)
     render_html_to_png(HTML_SOAM_ARCH, os.path.join(OUTPUT_DIR, "soam_architecture_diagram.png"), width=1500, height=880)
     render_html_to_png(HTML_SOAM_ARCH, os.path.join(OUTPUT_DIR, "soam_minimal_architecture_diagram.png"), width=1500, height=880)
     render_html_to_png(HTML_VPC_NET, os.path.join(OUTPUT_DIR, "gcp_vpc_network_diagram.png"), width=1500, height=880)

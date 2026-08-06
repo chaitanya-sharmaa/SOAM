@@ -6,6 +6,10 @@
 
 ## 🏗️ Platform Architecture
 
+### Network Connectivity & PKI Certificate Architecture
+
+![GCP DAP — Network Connectivity & PKI Certificate Architecture](docs/network_connectivity_and_certs_diagram.png)
+
 ### VPC Network Topology & Connectivity
 
 ![GCP DAP — VPC Network Topology & Connectivity](docs/gcp_vpc_network_diagram.png)

@@ -192,6 +192,26 @@ Even though compute (Cloud Run), state (Firestore), and messaging (Pub/Sub) are 
 
 ---
 
+## 3.1 Resource Connectivity & PKI / Certificate Architecture
+
+![GCP DAP Network Connectivity & PKI Certificate Architecture](network_connectivity_and_certs_diagram.png)
+
+### End-to-End Connection Map & Certificate Origins
+
+Understanding the cryptographic trust chain and origin of TLS certificates is essential for enterprise security compliance:
+
+| Connection Channel | Protocol & Port | Transport Security | Certificate Authority (CA) / Origin | Identity & Token Validation |
+|---|---|---|---|---|
+| **1. Client ➔ API Gateway** | `HTTPS` / TCP `443` | TLS 1.3 | **Google Trust Services (GTS CA 1C3)**<br>Managed Google SSL certificate on `*.gateway.dev` rotated automatically by GCP | **Google IAM OIDC Bearer Token** (`accounts.google.com`). Gateway validates signature using public JWKS from `https://www.googleapis.com/oauth2/v3/certs`. |
+| **2. API Gateway ➔ Agent 1** | `HTTP/2` / TCP `443` | Google ALTS / Internal mTLS | **Google Borg Production Internal CA**<br>Internal encrypted transport between Google edge reverse proxies and Cloud Run | **Gateway Service Account** (`sa-dev-api-gateway`) mints internal OIDC ID token with `audience = Cloud Run URL` (`roles/run.invoker`). |
+| **3. Pub/Sub Push ➔ Agent 2** | `HTTPS` / TCP `443` | Google Internal TLS | **Google Internal Production CA**<br>Encrypted payload delivery over Google SDN | **Pub/Sub Invoker Service Account** (`sa-dev-ps-invoker`) supplies signed OIDC token attached to push header. |
+| **4. Cloud Run ➔ Subnet** | Direct VPC Egress | Layer-3 Encapsulation | **VPC Subnet IP Allocation** (`10.10.1.0/24`)<br>Sub-2ms direct IP binding without VM connector bottleneck | **VPC Firewall Rules** (`allow-internal` for TCP 443, 5432, 8080). |
+| **5. Agents ➔ Cloud SQL** | `TCP` / `5432` | TLS (verify-full / mTLS) | **Google Cloud SQL Managed Server CA** (`server-ca.pem`)<br>Server certificate managed by Google Cloud SQL service | **IAM Database Authentication** / Cloud SQL Auth Proxy mints ephemeral 60-minute client TLS certificates via `sqladmin.googleapis.com`. |
+| **6. Agents ➔ Firestore / Secrets** | `HTTPS` / TCP `443` (PGA) | TLS 1.3 | **Google Trust Services (GTS Root R1)**<br>Standard Google public SSL certificates for `*.googleapis.com` | **Workload Identity / Service Account IAM**; verified against container system trust store (`/etc/ssl/certs/ca-certificates.crt`). |
+| **7. Agents ➔ External LLMs** | `HTTPS` / TCP `443` (NAT) | TLS 1.3 | **Public Web PKI** (DigiCert, Let's Encrypt, Cloudflare)<br>Third-party SaaS TLS endpoints | API Keys injected from **Secret Manager**; outbound via Cloud NAT **Static Public IP (`34.x.x.x`)**. |
+
+---
+
 ## 4. Hop-by-Hop Packet & Connection Lifecycle
 
 ![GCP Hop-by-Hop Packet Journey](gcp_hop_by_hop_diagram.png)
