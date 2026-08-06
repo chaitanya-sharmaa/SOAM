@@ -91,7 +91,7 @@ resource "google_pubsub_subscription" "agent_1_push_sub" {
   }
 
   dead_letter_policy {
-    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-agent-1-dlq"
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-dlq-topic"
     max_delivery_attempts = 5
   }
 
@@ -181,7 +181,7 @@ resource "google_pubsub_subscription" "agent_2_push_sub" {
   }
 
   dead_letter_policy {
-    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-agent-2-dlq"
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-dlq-topic"
     max_delivery_attempts = 5
   }
 

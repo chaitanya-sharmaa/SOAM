@@ -160,7 +160,7 @@ resource "google_pubsub_subscription" "gatekeeper_push_sub" {
   }
 
   dead_letter_policy {
-    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-gatekeeper-dlq"
+    dead_letter_topic     = "projects/${var.project_id}/topics/${var.environment}-dap-dlq-topic"
     max_delivery_attempts = 5
   }
 
