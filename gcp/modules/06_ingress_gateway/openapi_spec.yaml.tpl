@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
-  title: "Enterprise Digital Agent Platform (DAP) API"
-  description: "Edge REST API for Business Applications and Clients to trigger multi-agent workflows."
+  title: "Enterprise SOAM Multi-Agent Platform API"
+  description: "Edge REST API for Business Applications and Clients to trigger Agent 1 and Agent 2 workflows."
   version: "1.0.0"
 schemes:
   - "https"
@@ -20,36 +20,36 @@ securityDefinitions:
     x-google-audiences: "${pingidentity_audience}"
 
 paths:
-  /v1/agents/execute:
+  /v1/agent1/tasks:
     post:
-      summary: "Execute an Agent Task via Agent Gateway"
-      operationId: "executeAgentTask"
+      summary: "Execute an Agent Task via Agent 1 (Primary Coordinator)"
+      operationId: "executeAgent1Task"
       security:
         - pingidentity_auth: []
       x-google-backend:
-        address: "${agent_gateway_backend_url}/v1/tasks"
+        address: "${agent_1_backend_url}/v1/tasks/process"
         protocol: "h2"
       responses:
         '200':
-          description: "Task successfully submitted or executed"
+          description: "Task successfully processed"
           schema:
             type: "object"
         '401':
           description: "Unauthorized: Invalid or expired PingIdentity JWT token"
-        '429':
-          description: "Too Many Requests: Cloud Armor rate limit triggered"
 
-  /v1/agents/registry:
-    get:
-      summary: "Discover registered Agents and capabilities"
-      operationId: "getAgentCatalog"
+  /v1/agent2/tasks:
+    post:
+      summary: "Execute a Specialized Agent Task via Agent 2"
+      operationId: "executeAgent2Task"
       security:
         - pingidentity_auth: []
       x-google-backend:
-        address: "${agent_registry_backend_url}/v1/catalog"
+        address: "${agent_2_backend_url}/v1/tasks/process"
         protocol: "h2"
       responses:
         '200':
-          description: "List of registered agents"
+          description: "Task successfully processed"
           schema:
-            type: "array"
+            type: "object"
+        '401':
+          description: "Unauthorized: Invalid or expired PingIdentity JWT token"

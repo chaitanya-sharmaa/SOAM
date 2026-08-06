@@ -1,5 +1,5 @@
 # ==============================================================================
-# Terragrunt Module: 06_ingress_gateway
+# Terragrunt Module: 06_ingress_gateway (SOAM 2-Agent Setup)
 # ==============================================================================
 
 include "root" {
@@ -19,15 +19,15 @@ dependency "compute" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
-    agent_gateway_uri  = "https://dev-dap-agent-gateway-xyz.europe-west1.run.app"
-    agent_registry_uri = "https://dev-dap-agent-registry-xyz.europe-west1.run.app"
+    agent_1_uri = "https://dev-dap-agent-1-xyz.europe-west1.run.app"
+    agent_2_uri = "https://dev-dap-agent-2-xyz.europe-west1.run.app"
   }
 }
 
 inputs = {
-  agent_gateway_backend_url  = dependency.compute.outputs.agent_gateway_uri
-  agent_registry_backend_url = dependency.compute.outputs.agent_registry_uri
-  pingidentity_issuer_url    = local.env_vars.locals.pingidentity_issuer_url
-  pingidentity_jwks_url      = local.env_vars.locals.pingidentity_jwks_url
-  pingidentity_audience      = local.env_vars.locals.pingidentity_audience
+  agent_1_backend_url     = dependency.compute.outputs.agent_1_uri
+  agent_2_backend_url     = dependency.compute.outputs.agent_2_uri
+  pingidentity_issuer_url = local.env_vars.locals.pingidentity_issuer_url
+  pingidentity_jwks_url   = local.env_vars.locals.pingidentity_jwks_url
+  pingidentity_audience   = local.env_vars.locals.pingidentity_audience
 }

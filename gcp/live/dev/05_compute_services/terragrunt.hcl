@@ -1,5 +1,5 @@
 # ==============================================================================
-# Terragrunt Module: 05_compute_services
+# Terragrunt Module: 05_compute_services (SOAM 2-Agent Setup)
 # ==============================================================================
 
 include "root" {
@@ -30,15 +30,8 @@ dependency "security" {
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     service_accounts = {
-      "agent-registry"  = "sa-dev-agent-registry@my-dap-gcp-project.iam.gserviceaccount.com"
-      "agent-gateway"   = "sa-dev-agent-gateway@my-dap-gcp-project.iam.gserviceaccount.com"
-      "gatekeeper"      = "sa-dev-gatekeeper@my-dap-gcp-project.iam.gserviceaccount.com"
-      "mcp-gateway"     = "sa-dev-mcp-gateway@my-dap-gcp-project.iam.gserviceaccount.com"
-      "guardrails"      = "sa-dev-guardrails@my-dap-gcp-project.iam.gserviceaccount.com"
-      "grid-monitoring" = "sa-dev-grid-monitoring@my-dap-gcp-project.iam.gserviceaccount.com"
-      "grid-lens"       = "sa-dev-grid-lens@my-dap-gcp-project.iam.gserviceaccount.com"
-      "agent-1"         = "sa-dev-agent-1@my-dap-gcp-project.iam.gserviceaccount.com"
-      "agent-2"         = "sa-dev-agent-2@my-dap-gcp-project.iam.gserviceaccount.com"
+      "agent-1" = "sa-dev-agent-1@my-dap-gcp-project.iam.gserviceaccount.com"
+      "agent-2" = "sa-dev-agent-2@my-dap-gcp-project.iam.gserviceaccount.com"
     }
   }
 }
@@ -48,9 +41,8 @@ dependency "data_state" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
-    firestore_database_name = "dev-dap-firestore"
-    registry_db_private_ip  = "10.10.16.2"
-    gateway_db_private_ip   = "10.10.16.3"
+    firestore_database_name = "(default)"
+    db_private_ip           = "10.10.16.2"
     bigquery_dataset_id     = "dev_dap_ctt_analytics"
   }
 }
@@ -62,7 +54,6 @@ dependency "messaging" {
   mock_outputs = {
     agent_1_inbound_topic_id = "projects/my-dap-gcp-project/topics/dev-dap-agent-1-inbound-topic"
     agent_2_inbound_topic_id = "projects/my-dap-gcp-project/topics/dev-dap-agent-2-inbound-topic"
-    gatekeeper_topic_id      = "projects/my-dap-gcp-project/topics/dev-dap-gatekeeper-topic"
   }
 }
 
@@ -74,8 +65,5 @@ inputs = {
   firestore_database_name  = dependency.data_state.outputs.firestore_database_name
   agent_1_inbound_topic_id = dependency.messaging.outputs.agent_1_inbound_topic_id
   agent_2_inbound_topic_id = dependency.messaging.outputs.agent_2_inbound_topic_id
-  gatekeeper_topic_id      = dependency.messaging.outputs.gatekeeper_topic_id
-  registry_db_private_ip   = dependency.data_state.outputs.registry_db_private_ip
-  gateway_db_private_ip    = dependency.data_state.outputs.gateway_db_private_ip
-  bigquery_dataset_id      = dependency.data_state.outputs.bigquery_dataset_id
+  db_private_ip            = dependency.data_state.outputs.db_private_ip
 }

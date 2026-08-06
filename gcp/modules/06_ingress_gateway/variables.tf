@@ -15,18 +15,18 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "agent_gateway_backend_url" {
-  description = "Cloud Run backend URI for Agent Gateway"
+variable "agent_1_backend_url" {
+  description = "Cloud Run backend URI for Agent 1"
   type        = string
 }
 
-variable "agent_registry_backend_url" {
-  description = "Cloud Run backend URI for Agent Registry"
+variable "agent_2_backend_url" {
+  description = "Cloud Run backend URI for Agent 2"
   type        = string
 }
 
 variable "pingidentity_issuer_url" {
-  description = "PingIdentity OIDC token issuer URL (e.g. https://auth.enterprise.com)"
+  description = "PingIdentity OIDC token issuer URL"
   type        = string
   default     = "https://auth.enterprise.com"
 }

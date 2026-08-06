@@ -6,7 +6,7 @@
 # 1. Service Account for API Gateway
 resource "google_service_account" "api_gateway_sa" {
   account_id   = "sa-${var.environment}-api-gateway"
-  display_name = "DAP API Gateway Service Account"
+  display_name = "SOAM API Gateway Service Account"
   project      = var.project_id
 }
 
@@ -21,7 +21,7 @@ resource "google_project_iam_member" "api_gateway_run_invoker" {
 resource "google_api_gateway_api" "dap_api" {
   provider     = google-beta
   api_id       = "${var.environment}-dap-api"
-  display_name = "Digital Agent Platform API"
+  display_name = "Digital Agent Platform SOAM API"
   project      = var.project_id
 }
 
@@ -30,18 +30,18 @@ resource "google_api_gateway_api_config" "dap_api_cfg" {
   provider      = google-beta
   api           = google_api_gateway_api.dap_api.api_id
   api_config_id = "${var.environment}-dap-cfg-${formatdate("YYYYMMDDhhmmss", timestamp())}"
-  display_name  = "DAP API Config"
+  display_name  = "DAP SOAM API Config"
   project       = var.project_id
 
   openapi_documents {
     document {
       path = "openapi_spec.yaml"
       contents = base64encode(templatefile("${path.module}/openapi_spec.yaml.tpl", {
-        agent_gateway_backend_url  = var.agent_gateway_backend_url
-        agent_registry_backend_url = var.agent_registry_backend_url
-        pingidentity_issuer_url    = var.pingidentity_issuer_url
-        pingidentity_jwks_url      = var.pingidentity_jwks_url
-        pingidentity_audience      = var.pingidentity_audience
+        agent_1_backend_url     = var.agent_1_backend_url
+        agent_2_backend_url     = var.agent_2_backend_url
+        pingidentity_issuer_url = var.pingidentity_issuer_url
+        pingidentity_jwks_url   = var.pingidentity_jwks_url
+        pingidentity_audience   = var.pingidentity_audience
       }))
     }
   }

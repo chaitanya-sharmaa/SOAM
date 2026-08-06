@@ -1,46 +1,27 @@
 # Enterprise Digital Agent Platform (DAP) - GCP Architecture Guide
 
-## 1. Executive Summary
+## 1. Minimalist 2-Agent Production-Grade SOAM Setup (Core Proof of Architecture)
 
-The **Digital Agent Platform (DAP)** is a production-grade, event-driven, multi-agent AI execution platform provisioned on **Google Cloud Platform (GCP)**. It decouples client ingestion, security guardrails, agent reasoning, tool execution, and observability into isolated, serverless microservices with zero public ingress and hardened network boundaries.
+The **Service-Oriented Agent Mesh (SOAM)** architecture can be proven end-to-end with a streamlined **2-Agent** footprint while retaining **100% production-grade Zero-Trust security**, private networking, and asynchronous event-driven orchestration.
 
-The platform's core orchestration pattern is **SOAM (Service Oriented Agent Messaging)** — an async-first, event-driven architecture that enables robust, scalable, and auditable multi-agent task orchestration using Google Cloud Pub/Sub as the backbone message bus.
+![Minimalist 2-Agent SOAM Architecture](soam_minimal_architecture_diagram.png)
 
-```text
-                                      GOOGLE CLOUD DAP (Data & Agent Platform)
-+-------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                                         |
-|  +--------------------+   +------------------------------------------------------------------------------------------+  |
-|  | SHARED FOUNDATION  |   | [1] GOVERNANCE & STATE (03_data_state)                                                   |  |
-|  | (02_security_iam)  |   |     - Guardrails (Safety & Content Filter)  <-------> PingIdentity (OAuth2 / OIDC)       |  |
-|  | - Cloud IAM        |   |     - Firestore (Conversational / Agent State)                                           |  |
-|  | - Secret Manager   |   |     - Audit Logs (Cloud Logging 365-day Bucket) (07_observability)                       |  |
-|  | - KMS (CMEK)       |   +------------------------------------------------------------------------------------------+  |
-|  | - Cloud Logging    |   | [2] AGENT REGISTRY                 | [3] AGENT WORKSPACE (Project)                       |  |
-|  | - Cloud Monitoring |   |     - Agent Registry Service       |     - Agent 1  <==>  Agent 1 Inbound Topic (Pub/Sub) |  |
-|  |                    |   |     - Agent Registry (Cloud SQL)   |     - Agent 2  <==>  Agent 2 Inbound Topic (Pub/Sub) |  |
-|  |                    |   +------------------------------------+-----------------------------------------------------+  |
-|  |                    |   | [4] SOAM: AGENT BACKBONE & ORCHESTRATION (05_compute_services & 04_messaging)             |  |
-|  |                    |   |     - Agent Gateway (SOAM Engine)  — async Pub/Sub dispatch + sync fallback               |  |
-|  |                    |   |     - GateKeeper & GateKeeper Topic (Pub/Sub)  ==> CTT BigQuery (Analytics/Tracing)      |  |
-|  |                    |   |     - MCP Gateway (Model Context Protocol)     ==> External Enterprise APIs              |  |
-|  |                    |   |     - Grid Monitoring & Grid Lens (Observability & Dashboard UI)                         |  |
-|  +--------------------+   +------------------------------------------------------------------------------------------+  |
-+-------------------------------------------------------------------------------------------------------------------------+
-                                              ^                                           |
-                                              | Ingress via API Gateway                   | Egress Calls
-                                              | (Cloud Armor WAF)                         v
-                         +-----------------------------------+               +--------------------------+
-                         | CLIENTS & CONSUMERS               |               | ENTERPRISE SERVICES      |
-                         | - Internal Users & Admins         |               | - PingIdentity (IdP)     |
-                         | - Business Application / BFF REST |               | - External Core APIs     |
-                         |                                   |               | - LLM APIs (Vertex AI)   |
-                         +-----------------------------------+               +--------------------------+
-```
+### Core Components of the 2-Agent SOAM Mesh:
+
+| Layer | Component | Implementation | Security & Production Hardening |
+|---|---|---|---|
+| **Edge Ingress** | Cloud API Gateway | Open API 2.0 definition routing `/v1/agent1/tasks` and `/v1/agent2/tasks` | PingIdentity OIDC JWT validation, SSL termination, IAM token exchange |
+| **Compute** | Agent 1 (Coordinator) | Cloud Run v2 (`dev-dap-agent-1`) | `INGRESS_TRAFFIC_INTERNAL_ONLY`, Direct VPC Egress, scales to zero ($0 idle) |
+| **Compute** | Agent 2 (Worker) | Cloud Run v2 (`dev-dap-agent-2`) | `INGRESS_TRAFFIC_INTERNAL_ONLY`, Direct VPC Egress, scales to zero ($0 idle) |
+| **Messaging** | Pub/Sub Event Backbone | `agent-1-inbound-topic`, `agent-2-inbound-topic`, `dlq-topic` | OIDC-authenticated Push Subscriptions via `sa-dev-ps-invoker`, DLQ after 5 retries |
+| **Relational Data** | Cloud SQL | PostgreSQL 15 (`db-f1-micro`, 10GB SSD) | Private IP only (PSA Peering), Zero Public IP, automated backups |
+| **State & Memory** | Firestore Native | Native Document Database `(default)` | Sub-millisecond session scratchpad & multi-turn dialog memory via Private Google Access |
+| **Secrets & Keys** | Secret Manager | Google-managed encrypted secret vault | Fine-grained IAM accessor roles for DB credentials and LLM tokens |
+| **Egress Routing** | Cloud NAT Gateway | Cloud Router + Static IP | Predictable, allowlistable outbound IP for external LLM API calls |
 
 ---
 
-## 2. GCP VPC Network Topology & Traffic Flows
+## 2. Complete Enterprise Reference Topology (Full Ecosystem)
 
 ![GCP DAP Full VPC Network Topology & Connectivity Map](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_vpc_network_diagram.png)
 

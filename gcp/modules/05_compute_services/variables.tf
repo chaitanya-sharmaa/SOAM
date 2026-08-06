@@ -16,12 +16,12 @@ variable "environment" {
 }
 
 variable "vpc_id" {
-  description = "ID of the Customer Custom VPC network (used by Cloud Run Direct VPC Egress network_interfaces)"
+  description = "ID of the Customer Custom VPC network"
   type        = string
 }
 
 variable "subnet_id" {
-  description = "ID of snet-private-workload subnet. Cloud Run instances attach here directly via Direct VPC Egress (no connector VMs)."
+  description = "ID of private workload subnet for Direct VPC Egress"
   type        = string
 }
 
@@ -31,7 +31,7 @@ variable "service_account_emails" {
 }
 
 variable "container_images" {
-  description = "Map of container images for each microservice"
+  description = "Map of container images for each agent"
   type        = map(string)
 }
 
@@ -50,22 +50,8 @@ variable "agent_2_inbound_topic_id" {
   type        = string
 }
 
-variable "gatekeeper_topic_id" {
-  description = "ID of GateKeeper Pub/Sub Topic"
+variable "db_private_ip" {
+  description = "Private IP of SOAM Agent Cloud SQL"
   type        = string
-}
-
-variable "registry_db_private_ip" {
-  description = "Private IP of Agent Registry Cloud SQL"
-  type        = string
-}
-
-variable "gateway_db_private_ip" {
-  description = "Private IP of Agent Gateway Cloud SQL"
-  type        = string
-}
-
-variable "bigquery_dataset_id" {
-  description = "Dataset ID of CTT Analytics in BigQuery"
-  type        = string
+  default     = ""
 }

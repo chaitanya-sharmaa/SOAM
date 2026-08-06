@@ -1,14 +1,19 @@
 # ==============================================================================
-# Cloud SQL: Agent Registry DB & Agent Gateway DB (PostgreSQL 15 Private IP)
+# Cloud SQL: SOAM Agent DB (PostgreSQL 15 Private IP Only)
 # ==============================================================================
 
-# 1. Cloud SQL Instance for Agent Registry
-resource "google_sql_database_instance" "agent_registry_db" {
-  name                = "${var.environment}-dap-agent-registry-sql"
+resource "random_password" "agent_db_pass" {
+  length  = 24
+  special = false
+}
+
+# 1. Single Cloud SQL Instance for SOAM Agents
+resource "google_sql_database_instance" "agent_db" {
+  name                = "${var.environment}-dap-agent-sql"
   database_version    = "POSTGRES_15"
   region              = var.region
   project             = var.project_id
-  deletion_protection = false # Set true for production
+  deletion_protection = false
 
   settings {
     tier              = var.db_tier
@@ -35,56 +40,15 @@ resource "google_sql_database_instance" "agent_registry_db" {
   }
 }
 
-resource "google_sql_database" "registry_database" {
-  name     = "agent_registry"
-  instance = google_sql_database_instance.agent_registry_db.name
+resource "google_sql_database" "agent_database" {
+  name     = "agent_data"
+  instance = google_sql_database_instance.agent_db.name
   project  = var.project_id
 }
 
-resource "google_sql_user" "registry_user" {
-  name     = "registry_admin"
-  instance = google_sql_database_instance.agent_registry_db.name
-  password = random_password.registry_db_pass.result
-  project  = var.project_id
-}
-
-# 2. Cloud SQL Instance for Agent Gateway (SOAM Orchestration)
-resource "google_sql_database_instance" "agent_gateway_db" {
-  name                = "${var.environment}-dap-agent-gateway-sql"
-  database_version    = "POSTGRES_15"
-  region              = var.region
-  project             = var.project_id
-  deletion_protection = false
-
-  settings {
-    tier              = var.db_tier
-    availability_type = var.environment == "prod" ? "REGIONAL" : "ZONAL"
-    disk_size         = 10
-    disk_type         = "PD_SSD"
-    disk_autoresize   = false
-
-    ip_configuration {
-      ipv4_enabled    = false # Zero Public IP
-      private_network = var.vpc_id
-    }
-
-    backup_configuration {
-      enabled                        = true
-      point_in_time_recovery_enabled = true
-      start_time                     = "03:30"
-    }
-  }
-}
-
-resource "google_sql_database" "gateway_database" {
-  name     = "agent_gateway"
-  instance = google_sql_database_instance.agent_gateway_db.name
-  project  = var.project_id
-}
-
-resource "google_sql_user" "gateway_user" {
-  name     = "gateway_admin"
-  instance = google_sql_database_instance.agent_gateway_db.name
-  password = random_password.gateway_db_pass.result
+resource "google_sql_user" "agent_user" {
+  name     = "agent_admin"
+  instance = google_sql_database_instance.agent_db.name
+  password = random_password.agent_db_pass.result
   project  = var.project_id
 }

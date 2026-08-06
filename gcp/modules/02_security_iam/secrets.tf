@@ -1,13 +1,11 @@
 # ==============================================================================
-# Google Secret Manager: Sensitive Credential Vault
+# Google Secret Manager: Sensitive Credential Vault for SOAM
 # ==============================================================================
 
 locals {
   secret_names = [
-    "agent-registry-db-password",
-    "agent-gateway-db-password",
+    "agent-db-password",
     "pingidentity-client-secret",
-    "external-api-auth",
     "llm-api-token"
   ]
 }
@@ -34,34 +32,16 @@ resource "google_secret_manager_secret_version" "secret_versions" {
   }
 }
 
-# 3. Granular IAM Access: MCP Gateway can access External API and LLM tokens
-resource "google_secret_manager_secret_iam_member" "mcp_gateway_secret_access" {
-  for_each  = toset(["external-api-auth", "llm-api-token"])
+# 3. Granular IAM Access: Agent 1 and Agent 2 can access DB and LLM tokens
+resource "google_secret_manager_secret_iam_member" "agent_secret_access" {
+  for_each = {
+    "agent-1-db"  = { agent = "agent-1", secret = "agent-db-password" }
+    "agent-1-llm" = { agent = "agent-1", secret = "llm-api-token" }
+    "agent-2-db"  = { agent = "agent-2", secret = "agent-db-password" }
+    "agent-2-llm" = { agent = "agent-2", secret = "llm-api-token" }
+  }
   project   = var.project_id
-  secret_id = google_secret_manager_secret.secrets[each.key].secret_id
+  secret_id = google_secret_manager_secret.secrets[each.value.secret].secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.service_accounts["mcp-gateway"].email}"
-}
-
-# 4. Granular IAM Access: GateKeeper can access PingIdentity Client Secret
-resource "google_secret_manager_secret_iam_member" "gatekeeper_pingidentity_secret_access" {
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.secrets["pingidentity-client-secret"].secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.service_accounts["gatekeeper"].email}"
-}
-
-# 5. Granular IAM Access: Registry & Gateway can access their respective DB passwords
-resource "google_secret_manager_secret_iam_member" "registry_db_secret_access" {
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.secrets["agent-registry-db-password"].secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.service_accounts["agent-registry"].email}"
-}
-
-resource "google_secret_manager_secret_iam_member" "gateway_db_secret_access" {
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.secrets["agent-gateway-db-password"].secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.service_accounts["agent-gateway"].email}"
+  member    = "serviceAccount:${google_service_account.service_accounts[each.value.agent].email}"
 }

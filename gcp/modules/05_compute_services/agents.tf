@@ -1,11 +1,11 @@
 # ==============================================================================
-# Agent Project Workspace: Agent 1 & Agent 2 Execution Compute
-# Cloud Run Direct VPC Egress: instances attach directly to snet-private-workload.
-# No VPC Access Connector proxy VMs — lower latency, higher throughput, no bottleneck.
+# Module: 05_compute_services
+# SOAM Mesh: Agent 1 (Primary Coordinator) & Agent 2 (Worker) Compute
+# Cloud Run Direct VPC Egress: instances attach directly to private subnet.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Agent 1
+# Agent 1 (Coordinator)
 # ------------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "agent_1" {
   name     = "${var.environment}-dap-agent-1"
@@ -21,9 +21,6 @@ resource "google_cloud_run_v2_service" "agent_1" {
       max_instance_count = 2
     }
 
-    # Direct VPC Egress: Cloud Run instance IPs come from snet-private-workload
-    # No connector proxy — packets enter VPC natively, then route to Cloud SQL (PSA)
-    # or Cloud NAT (external APIs). BigQuery/Firestore go via PGA (no VPC needed).
     vpc_access {
       network_interfaces {
         network    = var.vpc_id
@@ -55,12 +52,12 @@ resource "google_cloud_run_v2_service" "agent_1" {
         value = var.firestore_database_name
       }
       env {
-        name  = "MCP_GATEWAY_URL"
-        value = "https://${var.environment}-dap-mcp-gateway-${var.project_id}.${var.region}.run.app"
+        name  = "DB_HOST"
+        value = var.db_private_ip
       }
       env {
-        name  = "GUARDRAILS_URL"
-        value = "https://${var.environment}-dap-guardrails-${var.project_id}.${var.region}.run.app"
+        name  = "AGENT_2_TOPIC"
+        value = var.agent_2_inbound_topic_id
       }
     }
   }
@@ -102,7 +99,7 @@ resource "google_pubsub_subscription" "agent_1_push_sub" {
 }
 
 # ------------------------------------------------------------------------------
-# Agent 2
+# Agent 2 (Worker / Specialist)
 # ------------------------------------------------------------------------------
 resource "google_cloud_run_v2_service" "agent_2" {
   name     = "${var.environment}-dap-agent-2"
@@ -149,8 +146,8 @@ resource "google_cloud_run_v2_service" "agent_2" {
         value = var.firestore_database_name
       }
       env {
-        name  = "MCP_GATEWAY_URL"
-        value = "https://${var.environment}-dap-mcp-gateway-${var.project_id}.${var.region}.run.app"
+        name  = "DB_HOST"
+        value = var.db_private_ip
       }
     }
   }
