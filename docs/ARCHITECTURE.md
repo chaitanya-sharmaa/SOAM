@@ -178,13 +178,17 @@ Even though compute (Cloud Run), state (Firestore), and messaging (Pub/Sub) are 
    - Foundation for **VPC Service Controls** perimeters to prevent data exfiltration.
    - Enables future **Cloud VPN** or **Dedicated Interconnect** to on-premises systems.
 
-### Network Boundaries
+![GCP DAP Network Topology and Architectural Boundaries](gcp_vpc_network_diagram.png)
 
-| Boundary | CIDR | Purpose |
-|---|---|---|
-| Customer VPC | `10.10.0.0/16` | Parent network |
-| `snet-private-workload` | `10.10.1.0/24` | Cloud Run Direct VPC Egress subnet; Private Google Access enabled |
-| PSA Peering Range | `10.10.16.0/20` | Reserved for Cloud SQL private IP allocation |
+### Architectural Domains & Boundary Isolation
+
+| Architectural Domain | Managed By | Components | Network Isolation / Reachability |
+|---|---|---|---|
+| **1. Customer VPC Network** | Customer Terraform | `snet-private-workload` (`10.10.1.0/24`), Cloud Router & Cloud NAT (`34.x.x.x`), PSA Range (`10.10.16.0/20`), Firewall Rules | Isolated private VPC in `europe-west1`; hosts Direct VPC Egress interface bindings; zero public IP on workload subnet |
+| **2. Serverless Compute Plane** | Google Cloud (Cloud Run v2) | `dev-dap-agent-1` (Coordinator), `dev-dap-agent-2` (Worker) | Serverless microservices (`INTERNAL_ONLY` ingress); attaches to Customer VPC via **Direct VPC Egress** (`network_interfaces`) |
+| **3. Google Managed Tenant VPC** | Google Cloud (Service Networking) | Cloud SQL PostgreSQL 15 (`10.10.16.x`) | 100% Private IP (`ipv4_enabled = false`); peered to Customer VPC via **Private Services Access (PSA)** |
+| **4. Google Managed PaaS / APIs** | Google Cloud (Global SDN) | Cloud Firestore Native, Cloud Pub/Sub, Secret Manager, BigQuery | Accessed directly from Subnet via **Private Google Access (PGA)** on Google private VIPs (`199.36.153.8/30`); zero internet or NAT traversal |
+| **5. Edge Ingress & Egress** | Google Managed Edge | Cloud API Gateway (`*.gateway.dev`), Static Cloud NAT IP (`34.x.x.x`) | Validates external OIDC JWT tokens at edge; routes deterministically to external LLM SaaS APIs |
 
 ---
 

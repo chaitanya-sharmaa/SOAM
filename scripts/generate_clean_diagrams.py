@@ -24,7 +24,7 @@ def render_html_to_png(html_content, output_png_path, width=1600, height=1200):
     print(f"Rendered: {output_png_path}")
 
 # ==============================================================================
-# Diagram 1: Overall SOAM Architecture
+# Diagram 1: Overall SOAM Architecture (Clear Boundary Separation)
 # ==============================================================================
 HTML_SOAM_ARCH = """<!DOCTYPE html>
 <html>
@@ -34,57 +34,57 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   body { background: #ffffff; width: 1500px; height: 880px; padding: 30px; display: flex; flex-direction: column; color: #1e293b; }
   
-  .header { text-align: center; margin-bottom: 25px; }
-  .header h1 { font-size: 32px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
-  .header p { font-size: 16px; color: #64748b; margin-top: 6px; font-weight: 500; }
+  .header { text-align: center; margin-bottom: 22px; }
+  .header h1 { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+  .header p { font-size: 15px; color: #64748b; margin-top: 4px; font-weight: 500; }
   
-  .main-grid { display: grid; grid-template-columns: 280px 1fr 340px; gap: 24px; flex: 1; }
+  .main-grid { display: grid; grid-template-columns: 280px 1fr 370px; gap: 20px; flex: 1; }
   
-  .column { display: flex; flex-direction: column; gap: 20px; }
+  .column { display: flex; flex-direction: column; gap: 16px; }
   
-  .card { background: #ffffff; border-radius: 16px; border: 1.5px solid #e2e8f0; padding: 22px; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); position: relative; }
-  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .card-title { font-size: 17px; font-weight: 700; color: #0f172a; }
-  .icon-badge { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .card { background: #ffffff; border-radius: 14px; border: 1.5px solid #e2e8f0; padding: 18px; box-shadow: 0 4px 16px -2px rgba(0,0,0,0.04); position: relative; }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+  .icon-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
   
   .ingress-col .card { border-color: #bfdbfe; background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%); }
   .ingress-badge { background: #dbeafe; color: #1d4ed8; }
   
-  .center-col { display: flex; flex-direction: column; gap: 20px; }
+  .center-col { display: flex; flex-direction: column; gap: 16px; }
   
   .mesh-card { border-color: #bbf7d0; background: #f0fdf4; border-width: 2px; }
   .mesh-badge { background: #dcfce7; color: #15803d; }
   
-  .agent-box { background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .agent-box { background: #ffffff; border-radius: 10px; border: 1.5px solid #cbd5e1; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
   .agent-box.coordinator { border-left: 5px solid #2563eb; }
   .agent-box.worker { border-left: 5px solid #16a34a; }
   
-  .agent-title { font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-  .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; }
+  .agent-title { font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .badge { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-green { background: #dcfce7; color: #166534; }
   .badge-purple { background: #f3e8ff; color: #6b21a8; }
   .badge-amber { background: #fef3c7; color: #92400e; }
-  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-teal { background: #ccfbf1; color: #115e59; }
   
-  .agent-desc { font-size: 13px; color: #475569; margin-top: 6px; line-height: 1.4; }
+  .agent-desc { font-size: 12px; color: #475569; margin-top: 5px; line-height: 1.35; }
   .agent-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
   
   .bus-card { border-color: #e9d5ff; background: #faf5ff; }
   .bus-badge { background: #f3e8ff; color: #7e22ce; }
   
-  .topic-item { background: #ffffff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #581c87; font-family: ui-monospace, monospace; }
+  .topic-item { background: #ffffff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: #581c87; font-family: ui-monospace, monospace; }
   
   .data-col .card { border-color: #fed7aa; background: #fff7ed; }
   .data-badge { background: #ffedd5; color: #c2410c; }
   
-  .resource-item { background: #ffffff; border: 1px solid #fdba74; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-  .resource-name { font-size: 14px; font-weight: 700; color: #9a3412; display: flex; justify-content: space-between; align-items: center; }
-  .resource-detail { font-size: 12px; color: #475569; margin-top: 4px; }
+  .resource-item { background: #ffffff; border: 1px solid #fdba74; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .resource-name { font-size: 13px; font-weight: 700; color: #9a3412; display: flex; justify-content: space-between; align-items: center; }
+  .resource-detail { font-size: 11.5px; color: #475569; margin-top: 3px; line-height: 1.3; }
   
-  .footer-bar { margin-top: 18px; padding: 14px 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-around; font-size: 13px; font-weight: 600; color: #334155; }
-  .footer-item { display: flex; align-items: center; gap: 8px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .footer-bar { margin-top: 14px; padding: 10px 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-around; font-size: 12px; font-weight: 600; color: #334155; }
+  .footer-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
   .dot-blue { background: #2563eb; }
   .dot-green { background: #16a34a; }
   .dot-purple { background: #9333ea; }
@@ -98,58 +98,65 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
   </div>
   
   <div class="main-grid">
-    <!-- Ingress Layer -->
+    <!-- Zone 1: Ingress Layer -->
     <div class="column ingress-col">
-      <div class="card" style="flex: 1;">
-        <div class="card-header">
-          <div class="icon-badge ingress-badge">🌐</div>
-          <div class="card-title">1. Ingress Layer</div>
+      <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="card-header">
+            <div class="icon-badge ingress-badge">🌐</div>
+            <div class="card-title">1. Ingress Layer</div>
+          </div>
+          
+          <div style="background: #ffffff; border: 1.5px solid #93c5fd; border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+            <div style="font-weight: 700; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between;">
+              <span>External Client</span>
+              <span class="badge badge-blue">HTTPS / REST</span>
+            </div>
+            <div style="font-size: 11.5px; color: #475569; margin-top: 4px;">
+              Requests signed with Google IAM OIDC Bearer Token.
+            </div>
+          </div>
+          
+          <div style="text-align: center; color: #2563eb; font-weight: 700; font-size: 12px; margin: 8px 0;">
+            ⬇️ Validates JWT
+          </div>
+          
+          <div style="background: #ffffff; border: 1.5px solid #2563eb; border-radius: 10px; padding: 12px;">
+            <div style="font-weight: 700; font-size: 13px; color: #1e40af; display: flex; justify-content: space-between;">
+              <span>Cloud API Gateway</span>
+              <span class="badge badge-blue">Managed URL</span>
+            </div>
+            <div style="font-size: 11.5px; color: #475569; margin-top: 4px; line-height: 1.35;">
+              • Validates token via Google JWKS (accounts.google.com)<br>
+              • Impersonates Gateway Service Account<br>
+              • Routes internal request to Coordinator
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 4px;">
+              <span class="badge badge-blue">OpenAPI 2.0</span>
+              <span class="badge badge-indigo" style="background:#e0e7ff; color:#3730a3;">Google IAM OIDC</span>
+            </div>
+          </div>
         </div>
         
-        <div class="agent-box" style="border-left: 5px solid #0284c7;">
-          <div class="agent-title">
-            <span>External Client</span>
-            <span class="badge badge-blue">HTTPS / REST</span>
-          </div>
-          <div class="agent-desc">Requests signed with Google IAM OIDC Bearer Token.</div>
-        </div>
-        
-        <div style="text-align: center; color: #0284c7; font-weight: 700; margin: 12px 0;">⬇️ Validates JWT</div>
-        
-        <div class="agent-box" style="border-left: 5px solid #0284c7;">
-          <div class="agent-title">
-            <span>Cloud API Gateway</span>
-            <span class="badge badge-blue">Managed URL</span>
-          </div>
-          <div class="agent-desc">
-            • Validates token via Google JWKS (accounts.google.com)<br>
-            • Impersonates Gateway Service Account<br>
-            • Routes internal request to Coordinator
-          </div>
-          <div class="agent-tags">
-            <span class="badge badge-blue">OpenAPI 2.0</span>
-            <span class="badge badge-purple">Google IAM OIDC</span>
-          </div>
-        </div>
-        
-        <div style="margin-top: 20px; padding: 12px; background: #ffffff; border-radius: 10px; border: 1px dashed #93c5fd; font-size: 12px; color: #1e40af;">
-          🔒 <strong>Zero Public Ingress:</strong> Both Cloud Run agents reject direct internet traffic (<code>INTERNAL_ONLY</code>).
+        <div style="background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; padding: 8px 10px; font-size: 11px; color: #1e40af;">
+          🔒 <strong>Zero Public Ingress:</strong> Both Cloud Run agents reject direct internet traffic (INTERNAL_ONLY).
         </div>
       </div>
     </div>
     
-    <!-- Compute Mesh & Messaging Layer -->
+    <!-- Zone 2 & 3: Compute Mesh & Message Bus -->
     <div class="column center-col">
-      <!-- 2-Agent Mesh -->
+      <!-- Zone 2: Serverless Compute Mesh -->
       <div class="card mesh-card">
         <div class="card-header">
           <div class="icon-badge mesh-badge">🤖</div>
-          <div class="card-title">2. SOAM Compute Mesh (Cloud Run v2)</div>
+          <div class="card-title">2. Serverless Compute Mesh (Cloud Run v2)</div>
         </div>
         
+        <!-- Agent 1 -->
         <div class="agent-box coordinator">
           <div class="agent-title">
-            <span>Agent 1: SOAM Coordinator</span>
+            <span style="color: #1e3a8a;">Agent 1: SOAM Coordinator</span>
             <span class="badge badge-blue">Gemini 1.5 Flash</span>
           </div>
           <div class="agent-desc">
@@ -162,9 +169,10 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
           </div>
         </div>
         
+        <!-- Agent 2 -->
         <div class="agent-box worker">
           <div class="agent-title">
-            <span>Agent 2: SOAM Specialist Worker</span>
+            <span style="color: #14532d;">Agent 2: SOAM Specialist Worker</span>
             <span class="badge badge-green">Diagnostics / Reasoning</span>
           </div>
           <div class="agent-desc">
@@ -178,11 +186,11 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
         </div>
       </div>
       
-      <!-- Pub/Sub Backbone -->
+      <!-- Zone 3: SOAM Message Bus -->
       <div class="card bus-card">
         <div class="card-header">
           <div class="icon-badge bus-badge">⚡</div>
-          <div class="card-title">3. SOAM Message Bus (Cloud Pub/Sub)</div>
+          <div class="card-title">3. SOAM Message Bus (Google Cloud Pub/Sub)</div>
         </div>
         
         <div class="topic-item">
@@ -193,51 +201,59 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
           <span>📨 agent-1-inbound-topic</span>
           <span class="badge badge-purple">OIDC Push Sub ➔ Agent 1</span>
         </div>
-        <div class="topic-item" style="border-color: #fca5a5; background: #fff5f5; color: #991b1b;">
-          <span>🛡️ dap-dlq-topic (Dead Letter Queue)</span>
-          <span class="badge badge-red">5 Retries • 7-Day Hold</span>
+        <div class="topic-item" style="border-color: #fca5a5; color: #991b1b;">
+          <span>🧯 dap-dlq-topic (Dead Letter Queue)</span>
+          <span class="badge badge-amber" style="background:#fee2e2; color:#991b1b;">5 Retries • 7-Day Hold</span>
         </div>
       </div>
     </div>
     
-    <!-- State, Storage & Egress -->
+    <!-- Zone 4: Managed State & Private Egress -->
     <div class="column data-col">
       <div class="card" style="flex: 1;">
         <div class="card-header">
           <div class="icon-badge data-badge">💾</div>
-          <div class="card-title">4. Private State & Egress</div>
+          <div class="card-title">4. Managed State & Egress</div>
         </div>
         
         <div class="resource-item">
           <div class="resource-name">
             <span>Cloud SQL PostgreSQL 15</span>
-            <span class="badge badge-amber">PSA 10.10.16.x</span>
+            <span class="badge badge-amber">Google Tenant VPC</span>
           </div>
-          <div class="resource-detail">100% Private IP via Peering. Zero public internet exposure.</div>
+          <div class="resource-detail">
+            100% Private IP (10.10.16.x) via <strong>Private Services Access (PSA)</strong> peering. Zero public IP exposure.
+          </div>
         </div>
         
         <div class="resource-item">
           <div class="resource-name">
             <span>Cloud Firestore Native</span>
-            <span class="badge badge-amber">PGA Zero-NAT</span>
+            <span class="badge badge-green">Private Google Access</span>
           </div>
-          <div class="resource-detail">Multi-turn agent session memory & delegation results.</div>
+          <div class="resource-detail">
+            Multi-turn agent session memory & delegation results over internal Google SDN (PGA VIPs).
+          </div>
         </div>
         
         <div class="resource-item">
           <div class="resource-name">
             <span>Secret Manager</span>
-            <span class="badge badge-amber">Encrypted Vault</span>
+            <span class="badge badge-amber">Private Google Access</span>
           </div>
-          <div class="resource-detail">Fine-grained IAM accessor for DB and LLM API keys.</div>
+          <div class="resource-detail">
+            Fine-grained IAM accessor for DB credentials and external LLM API keys.
+          </div>
         </div>
         
-        <div class="resource-item" style="border-color: #38bdf8; background: #f0f9ff;">
-          <div class="resource-name" style="color: #0369a1;">
-            <span>Cloud NAT (Static Outbound)</span>
-            <span class="badge badge-blue">34.x.x.x Static IP</span>
+        <div class="resource-item" style="border-color: #93c5fd;">
+          <div class="resource-name">
+            <span style="color: #1e40af;">Cloud NAT Gateway</span>
+            <span class="badge badge-blue">Customer VPC Subnet</span>
           </div>
-          <div class="resource-detail">Deterministic allowlistable IP for external LLM API calls.</div>
+          <div class="resource-detail">
+            Deterministic static outbound IP (<code>34.x.x.x</code>) for external LLM API allowlisting.
+          </div>
         </div>
       </div>
     </div>
@@ -247,14 +263,14 @@ HTML_SOAM_ARCH = """<!DOCTYPE html>
     <div class="footer-item"><div class="dot dot-blue"></div> Client & API Gateway Ingress</div>
     <div class="footer-item"><div class="dot dot-green"></div> 2-Agent Serverless Compute Mesh</div>
     <div class="footer-item"><div class="dot dot-purple"></div> Asynchronous SOAM Pub/Sub Bus</div>
-    <div class="footer-item"><div class="dot dot-orange"></div> 100% Private PSA/PGA State & Secure NAT Egress</div>
+    <div class="footer-item"><div class="dot dot-orange"></div> PSA Peered DB, PGA PaaS & Secure NAT Egress</div>
   </div>
 </body>
 </html>
 """
 
 # ==============================================================================
-# Diagram 2: VPC Network Topology
+# Diagram 2: VPC Network Topology & True GCP Architecture Boundaries
 # ==============================================================================
 HTML_VPC_NET = """<!DOCTYPE html>
 <html>
@@ -262,129 +278,168 @@ HTML_VPC_NET = """<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  body { background: #ffffff; width: 1500px; height: 880px; padding: 30px; display: flex; flex-direction: column; color: #1e293b; }
+  body { background: #ffffff; width: 1500px; height: 880px; padding: 30px; display: flex; flex-direction: column; color: #1e293b; justify-content: space-between; }
   
-  .header { text-align: center; margin-bottom: 25px; }
-  .header h1 { font-size: 32px; font-weight: 800; color: #0f172a; }
-  .header p { font-size: 16px; color: #64748b; margin-top: 6px; font-weight: 500; }
+  .header { text-align: center; margin-bottom: 16px; }
+  .header h1 { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+  .header p { font-size: 15px; color: #64748b; margin-top: 4px; font-weight: 500; }
   
-  .vpc-container { background: #f8fafc; border: 2.5px solid #3b82f6; border-radius: 20px; padding: 26px; flex: 1; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 30px rgba(59,130,246,0.08); }
-  .vpc-title { font-size: 20px; font-weight: 800; color: #1d4ed8; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .domains-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; margin-bottom: 12px; }
   
-  .net-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; flex: 1; }
+  .domain-card { background: #ffffff; border-radius: 14px; border: 2px solid #cbd5e1; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 3px 12px rgba(0,0,0,0.03); }
   
-  .subnet-box { background: #ffffff; border-radius: 16px; border: 2px solid #22c55e; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-  .subnet-title { font-size: 17px; font-weight: 700; color: #15803d; margin-bottom: 14px; display: flex; justify-content: space-between; }
+  .domain-title { font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   
-  .agents-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  .agent-card { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 16px; }
-  .agent-card h4 { font-size: 15px; font-weight: 700; color: #166534; margin-bottom: 6px; }
-  .agent-card p { font-size: 12px; color: #374151; line-height: 1.4; }
+  .inner-box { background: #f8fafc; border-radius: 10px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 8px; }
+  .inner-title { font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .inner-desc { font-size: 12px; color: #475569; line-height: 1.35; }
   
-  .direct-egress-banner { background: #dbeafe; border: 1px dashed #3b82f6; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #1e40af; font-weight: 600; text-align: center; }
-  
-  .peering-box { background: #ffffff; border-radius: 16px; border: 2px solid #a855f7; padding: 20px; margin-top: 18px; }
-  .peering-title { font-size: 16px; font-weight: 700; color: #7e22ce; margin-bottom: 10px; display: flex; justify-content: space-between; }
-  
-  .tenant-vpc { background: #faf5ff; border: 1.5px dashed #c084fc; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; }
-  
-  .right-col { display: flex; flex-direction: column; gap: 20px; }
-  
-  .nat-box { background: #ffffff; border-radius: 16px; border: 2px solid #0ea5e9; padding: 20px; }
-  .pga-box { background: #ffffff; border-radius: 16px; border: 2px solid #f59e0b; padding: 20px; flex: 1; }
-  
-  .pga-service { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #92400e; }
-  
-  .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; }
+  .badge { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 8px; }
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-green { background: #dcfce7; color: #166534; }
   .badge-purple { background: #f3e8ff; color: #6b21a8; }
   .badge-amber { background: #fef3c7; color: #92400e; }
+  .badge-teal { background: #ccfbf1; color: #115e59; }
+  
+  .footer-summary { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 18px; display: flex; justify-content: space-around; font-size: 12px; font-weight: 600; color: #334155; }
 </style>
 </head>
 <body>
   <div class="header">
-    <h1>GCP DAP — VPC Network Topology & Direct VPC Egress</h1>
-    <p>Strict Network Isolation • Zero Connector VMs • Private Services Access • Deterministic NAT Egress</p>
+    <h1>GCP DAP — Network Topology & Architectural Boundaries</h1>
+    <p>Precise Boundary Separation: Customer VPC • Serverless Compute Plane • Google Tenant VPC • Private Google Access</p>
   </div>
   
-  <div class="vpc-container">
-    <div class="vpc-title">
-      <span>🌐 Customer VPC Network: dev-dap-vpc (10.10.0.0/16)</span>
-      <span class="badge badge-blue">Region: europe-west1</span>
-    </div>
-    
-    <div class="net-grid">
-      <!-- Left: Subnet & Peering -->
+  <div class="domains-grid">
+    <!-- Domain 1: Customer VPC Network -->
+    <div class="domain-card" style="border-color: #3b82f6; background: #eff6ff;">
       <div>
-        <div class="subnet-box">
-          <div class="subnet-title">
-            <span>Workload Subnet: snet-private-workload (10.10.1.0/24)</span>
-            <span class="badge badge-green">Private Google Access (PGA) Enabled</span>
+        <div class="domain-title" style="color: #1e40af;">
+          <span>🌐 Customer VPC Network (dev-dap-vpc)</span>
+          <span class="badge badge-blue">CIDR: 10.10.0.0/16</span>
+        </div>
+        
+        <div class="inner-box" style="border-color: #93c5fd; background: #ffffff;">
+          <div class="inner-title">
+            <span>Workload Subnet: snet-private-workload</span>
+            <span class="badge badge-green">10.10.1.0/24 • PGA Enabled</span>
           </div>
-          
-          <div class="agents-row">
-            <div class="agent-card">
-              <h4>Agent 1: SOAM Coordinator</h4>
-              <p>• Cloud Run v2 (2 vCPU, 2GB)<br>• Direct VPC Egress: IP from subnet<br>• Ingress: INTERNAL_ONLY</p>
-            </div>
-            <div class="agent-card">
-              <h4>Agent 2: SOAM Worker</h4>
-              <p>• Cloud Run v2 (2 vCPU, 2GB)<br>• Direct VPC Egress: IP from subnet<br>• Ingress: INTERNAL_ONLY</p>
-            </div>
-          </div>
-          
-          <div class="direct-egress-banner">
-            ⚡ Direct VPC Egress: Container IPs allocated directly from snet-private-workload (Eliminates e2-micro Connector VMs & saves ~2ms per hop)
+          <div class="inner-desc">
+            • Subnet hosting <strong>Direct VPC Egress</strong> container IP leases.<br>
+            • Firewall Rule: <code>allow-internal</code> (TCP 443, 5432, 8080).<br>
+            • Zero public IP addresses on this subnet.
           </div>
         </div>
         
-        <div class="peering-box">
-          <div class="peering-title">
-            <span>Private Services Access (PSA) Peering (10.10.16.0/20)</span>
-            <span class="badge badge-purple">VPC Network Peering</span>
+        <div class="inner-box" style="border-color: #93c5fd; background: #ffffff;">
+          <div class="inner-title">
+            <span>Cloud Router & Cloud NAT Gateway</span>
+            <span class="badge badge-blue">Static IP: 34.x.x.x</span>
           </div>
-          <div class="tenant-vpc">
-            <div>
-              <div style="font-weight: 700; color: #581c87;">Google Managed Tenant VPC</div>
-              <div style="font-size: 12px; color: #6b21a8; margin-top: 2px;">Cloud SQL PostgreSQL 15 Instance (10.10.16.x)</div>
-            </div>
-            <span class="badge badge-purple" style="background: #e9d5ff;">100% Private IP (Zero Public IP)</span>
+          <div class="inner-desc">
+            • <code>dev-dap-router</code> + <code>dev-dap-nat</code> (MANUAL_ONLY allocation).<br>
+            • Translates outbound agent calls to external LLM & SaaS APIs.
           </div>
         </div>
       </div>
       
-      <!-- Right: Cloud NAT & PGA -->
-      <div class="right-col">
-        <div class="nat-box">
-          <div style="font-size: 16px; font-weight: 700; color: #0369a1; margin-bottom: 8px;">
-            Cloud Router & Cloud NAT
+      <div style="font-size: 11px; color: #1e40af; font-weight: 600; margin-top: 6px;">
+        📍 Region: europe-west1 • Managed by Customer Terraform
+      </div>
+    </div>
+    
+    <!-- Domain 2: Serverless Compute Plane -->
+    <div class="domain-card" style="border-color: #10b981; background: #f0fdf4;">
+      <div>
+        <div class="domain-title" style="color: #065f46;">
+          <span>🤖 Serverless Compute Plane (Cloud Run v2)</span>
+          <span class="badge badge-green">Google Managed Serverless</span>
+        </div>
+        
+        <div class="inner-box" style="border-color: #86efac; background: #ffffff;">
+          <div class="inner-title">
+            <span>Agent 1: SOAM Coordinator</span>
+            <span class="badge badge-blue">sa-dev-agent-1</span>
           </div>
-          <p style="font-size: 12px; color: #475569; margin-bottom: 10px;">
-            <code>dev-dap-router</code> + <code>dev-dap-nat</code> with <code>MANUAL_ONLY</code> IP allocation.
-          </p>
-          <div style="background: #e0f2fe; padding: 10px; border-radius: 8px; border: 1px solid #7dd3fc; font-size: 13px; font-weight: 700; color: #0369a1; text-align: center;">
-            Static Outbound IP: 34.x.x.x
-          </div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 6px; text-align: center;">
-            Allowlisted by external LLM and enterprise SaaS APIs
+          <div class="inner-desc">
+            • Direct VPC Egress: Container attaches directly to <code>snet-private-workload</code>.<br>
+            • Ingress: <code>INGRESS_TRAFFIC_INTERNAL_ONLY</code> (Protected from direct web).
           </div>
         </div>
         
-        <div class="pga-box">
-          <div style="font-size: 16px; font-weight: 700; color: #b45309; margin-bottom: 12px;">
-            Private Google Access (PGA)
+        <div class="inner-box" style="border-color: #86efac; background: #ffffff;">
+          <div class="inner-title">
+            <span>Agent 2: SOAM Worker</span>
+            <span class="badge badge-green">sa-dev-agent-2</span>
           </div>
-          <div class="pga-service">💾 Cloud Firestore Native</div>
-          <div class="pga-service">⚡ Cloud Pub/Sub Topics</div>
-          <div class="pga-service">📊 BigQuery Telemetry Dataset</div>
-          <div class="pga-service">🔐 Secret Manager Vault</div>
-          <div style="font-size: 11px; color: #78350f; margin-top: 8px;">
-            Traverses Google's internal SDN without hitting Cloud NAT or public internet.
+          <div class="inner-desc">
+            • Direct VPC Egress: Container attaches directly to <code>snet-private-workload</code>.<br>
+            • Invoked exclusively via Pub/Sub Push Subscription (OIDC auth).
           </div>
         </div>
       </div>
+      
+      <div style="background: #dcfce7; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #166534; font-weight: 600;">
+        ⚡ <strong>Direct VPC Egress:</strong> Sub-2ms container routing into Customer VPC without VM connector bottlenecks.
+      </div>
     </div>
+    
+    <!-- Domain 3: Google-Managed Tenant VPC (Cloud SQL) -->
+    <div class="domain-card" style="border-color: #a855f7; background: #faf5ff;">
+      <div>
+        <div class="domain-title" style="color: #6b21a8;">
+          <span>🏢 Google Tenant VPC (Service Producer Network)</span>
+          <span class="badge badge-purple">PSA Peering (10.10.16.0/20)</span>
+        </div>
+        
+        <div class="inner-box" style="border-color: #d8b4fe; background: #ffffff;">
+          <div class="inner-title">
+            <span>Cloud SQL PostgreSQL 15 Instance</span>
+            <span class="badge badge-purple">Private IP: 10.10.16.x</span>
+          </div>
+          <div class="inner-desc">
+            • <code>ipv4_enabled = false</code> (No public IP address exists on this instance).<br>
+            • Peered to Customer VPC via <strong>Private Services Access (PSA)</strong>.<br>
+            • Reachable only from Cloud Run agents via Direct VPC Egress over peering.
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #f3e8ff; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #6b21a8; font-weight: 600;">
+        🔒 <strong>Database Isolation:</strong> Database lives in Google's Tenant VPC, completely isolated from internet.
+      </div>
+    </div>
+    
+    <!-- Domain 4: Google Cloud Multi-Tenant PaaS / APIs -->
+    <div class="domain-card" style="border-color: #f59e0b; background: #fffbeb;">
+      <div>
+        <div class="domain-title" style="color: #92400e;">
+          <span>☁️ Google Cloud Managed PaaS & APIs</span>
+          <span class="badge badge-amber">Private Google Access (PGA)</span>
+        </div>
+        
+        <div class="inner-box" style="border-color: #fde68a; background: #ffffff;">
+          <div class="inner-title">
+            <span>Cloud Firestore Native + Cloud Pub/Sub + Secret Manager</span>
+            <span class="badge badge-amber">Google Global SDN VIPs</span>
+          </div>
+          <div class="inner-desc">
+            • Reached over Google internal backbone (VIPs <code>199.36.153.8/30</code>).<br>
+            • Traffic from Workload Subnet never traverses Cloud NAT or public internet.<br>
+            • Zero egress NAT cost for Google PaaS API traffic.
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #fef3c7; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #92400e; font-weight: 600;">
+        ⚡ <strong>PGA Advantage:</strong> High-bandwidth, sub-millisecond access to Google PaaS APIs.
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-summary">
+    <span>🌐 <strong>Customer VPC:</strong> Only contains subnets, NAT router, and peering connections.</span>
+    <span>🤖 <strong>Compute & State:</strong> Cloud Run is serverless, Cloud SQL is in Tenant VPC, and PaaS APIs are reached via PGA.</span>
   </div>
 </body>
 </html>
