@@ -39,6 +39,7 @@ resource "google_api_gateway_api_config" "dap_api_cfg" {
       contents = base64encode(templatefile("${path.module}/openapi_spec.yaml.tpl", {
         agent_1_backend_url = var.agent_1_backend_url
         agent_2_backend_url = var.agent_2_backend_url
+        google_audiences    = var.google_audiences
       }))
     }
   }

@@ -24,3 +24,9 @@ variable "agent_2_backend_url" {
   description = "Cloud Run backend URI for Agent 2"
   type        = string
 }
+
+variable "google_audiences" {
+  description = "Comma-separated list of allowed JWT audiences (e.g. gcloud SDK client ID or Gateway URL)"
+  type        = string
+  default     = "32555940559.apps.googleusercontent.com"
+}

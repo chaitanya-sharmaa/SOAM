@@ -17,6 +17,7 @@ securityDefinitions:
     flow: "implicit"
     x-google-issuer: "https://accounts.google.com"
     x-google-jwks_uri: "https://www.googleapis.com/oauth2/v3/certs"
+    x-google-audiences: "${google_audiences}"
 
 paths:
   /v1/agent1/tasks:
