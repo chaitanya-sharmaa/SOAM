@@ -16,7 +16,7 @@ terraform {
 
 dependency "networking" {
   config_path                             = "../01_networking"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     vpc_id    = "projects/my-dap-gcp-project/global/networks/dev-dap-vpc"
@@ -26,7 +26,7 @@ dependency "networking" {
 
 dependency "security" {
   config_path                             = "../02_security_iam"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     service_accounts = {
@@ -45,7 +45,7 @@ dependency "security" {
 
 dependency "data_state" {
   config_path                             = "../03_data_state"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     firestore_database_name = "dev-dap-firestore"
@@ -57,7 +57,7 @@ dependency "data_state" {
 
 dependency "messaging" {
   config_path                             = "../04_messaging"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     agent_1_inbound_topic_id = "projects/my-dap-gcp-project/topics/dev-dap-agent-1-inbound-topic"

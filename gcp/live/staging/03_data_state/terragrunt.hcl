@@ -16,7 +16,7 @@ terraform {
 
 dependency "networking" {
   config_path                             = "../01_networking"
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy", "init"]
   mock_outputs_merge_strategy_with_state  = "shallow"
   mock_outputs = {
     vpc_id = "projects/my-dap-gcp-project/global/networks/staging-dap-vpc"
