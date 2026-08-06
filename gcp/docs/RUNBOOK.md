@@ -211,7 +211,21 @@ flowchart LR
 
 ## 🔍 Step 6: Post-Deployment Smoke Tests & Verification
 
-Run these verification commands after deployment:
+### Option A: One-Click Automated 7-Layer E2E Test Suite (Recommended)
+
+Run the included automated verification script to validate all 7 layers (VPC, KMS, Cloud SQL, SOAM Topics & DLQ, Cloud Run, API Gateway, and BigQuery CTT):
+
+```bash
+# Run against the default project and dev environment
+./gcp/scripts/test_e2e.sh
+
+# Or customize with flags:
+./gcp/scripts/test_e2e.sh --project "YOUR_GCP_PROJECT_ID" --region "europe-west1" --env "dev"
+```
+
+---
+
+### Option B: Manual CLI Verification Commands
 
 ```bash
 PROJECT_ID="YOUR_GCP_PROJECT_ID"
@@ -221,10 +235,10 @@ REGION="europe-west1"
 gcloud run services list --project="${PROJECT_ID}" --region="${REGION}"
 
 # 2. Verify Direct VPC Egress configuration on Cloud Run
-gcloud run services describe dev-agent-gateway \
+gcloud run services describe dev-dap-agent-gateway \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
-  --format="yaml(spec.template.spec.containers[0].resources,spec.template.metadata.annotations)"
+  --format="yaml(spec.template.spec.vpcAccess,spec.template.metadata.annotations)"
 
 # 3. Verify Cloud SQL Private IP Instances (Registry + SOAM Gateway)
 gcloud sql instances list --project="${PROJECT_ID}"
