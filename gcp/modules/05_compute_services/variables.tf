@@ -35,6 +35,18 @@ variable "container_images" {
   type        = map(string)
 }
 
+variable "agent_1_source_dir" {
+  description = "Absolute path to Agent 1 source directory for automated builds"
+  type        = string
+  default     = ""
+}
+
+variable "agent_2_source_dir" {
+  description = "Absolute path to Agent 2 source directory for automated builds"
+  type        = string
+  default     = ""
+}
+
 variable "firestore_database_name" {
   description = "Name of the Firestore database for Agent State"
   type        = string

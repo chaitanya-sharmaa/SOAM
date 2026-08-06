@@ -148,11 +148,11 @@ else
 fi
 
 # 1.5 Private Services Access (PSA) Peering for Cloud SQL
-PSA_STATUS=$(gcloud compute networks peerings list --network="${VPC_NAME}" --project="${PROJECT_ID}" --format="value(state)" 2>/dev/null || echo "")
-if [[ "${PSA_STATUS}" =~ "ACTIVE" ]]; then
+PSA_STATUS=$(gcloud compute networks describe "${VPC_NAME}" --project="${PROJECT_ID}" --format="value(peerings[0].state)" 2>/dev/null || echo "")
+if [[ "${PSA_STATUS}" == "ACTIVE" ]]; then
   pass "Private Services Access (PSA) peering for Cloud SQL is ACTIVE"
 else
-  fail "PSA peering not active on ${VPC_NAME}"
+  fail "PSA peering not active on ${VPC_NAME} (status: ${PSA_STATUS})"
 fi
 
 # ==============================================================================

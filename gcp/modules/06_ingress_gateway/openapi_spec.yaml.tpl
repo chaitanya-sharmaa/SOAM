@@ -27,8 +27,9 @@ paths:
       security:
         - google_auth: []
       x-google-backend:
-        address: "${agent_1_backend_url}/v1/tasks/process"
-        protocol: "h2"
+        address: "${agent_1_backend_url}"
+        path_translation: CONSTANT_ADDRESS
+        jwt_audience: "${agent_1_backend_url}"
       responses:
         '200':
           description: "Task successfully processed"
@@ -44,8 +45,9 @@ paths:
       security:
         - google_auth: []
       x-google-backend:
-        address: "${agent_2_backend_url}/v1/tasks/process"
-        protocol: "h2"
+        address: "${agent_2_backend_url}"
+        path_translation: CONSTANT_ADDRESS
+        jwt_audience: "${agent_2_backend_url}"
       responses:
         '200':
           description: "Task successfully processed"
