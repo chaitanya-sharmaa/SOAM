@@ -1,0 +1,51 @@
+locals {
+  api_gateway_sa_email = var.api_gateway_sa_email != "" ? var.api_gateway_sa_email : "sa-${var.environment}-api-gateway@${var.project_id}.iam.gserviceaccount.com"
+}
+
+# 1. Cloud API Gateway Definition
+resource "google_api_gateway_api" "dap_api" {
+  provider     = google-beta
+  api_id       = "${var.environment}-dap-api"
+  display_name = "Digital Agent Platform SOAM API"
+  project      = var.project_id
+}
+
+# 3. API Gateway Configuration with OpenAPI Spec
+resource "google_api_gateway_api_config" "dap_api_cfg" {
+  provider      = google-beta
+  api           = google_api_gateway_api.dap_api.api_id
+  api_config_id = "${var.environment}-dap-cfg-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  display_name  = "DAP SOAM API Config"
+  project       = var.project_id
+
+  openapi_documents {
+    document {
+      path = "openapi_spec.yaml"
+      contents = base64encode(templatefile("${path.module}/openapi_spec.yaml.tpl", {
+        agent_1_backend_url = var.agent_1_backend_url
+        agent_2_backend_url = var.agent_2_backend_url
+        google_audiences    = var.google_audiences
+      }))
+    }
+  }
+
+  gateway_config {
+    backend_config {
+      google_service_account = local.api_gateway_sa_email
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [api_config_id]
+  }
+}
+
+# 4. API Gateway Deployment Instance
+resource "google_api_gateway_gateway" "dap_gateway" {
+  provider   = google-beta
+  gateway_id = "${var.environment}-dap-gateway"
+  api_config = google_api_gateway_api_config.dap_api_cfg.id
+  region     = var.region
+  project    = var.project_id
+}
