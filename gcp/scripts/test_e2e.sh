@@ -181,7 +181,7 @@ else
 fi
 
 # Secret Manager
-SECRETS=("${ENV}-dap-agent-db-password" "${ENV}-dap-pingidentity-client-secret" "${ENV}-dap-llm-api-token")
+SECRETS=("${ENV}-dap-agent-db-password" "${ENV}-dap-llm-api-token")
 for secret in "${SECRETS[@]}"; do
   if gcloud secrets describe "${secret}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
     pass "Secret Manager secret '${secret}' provisioned"

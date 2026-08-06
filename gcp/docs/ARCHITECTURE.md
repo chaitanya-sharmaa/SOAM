@@ -263,8 +263,6 @@ This pattern enables **horizontal multi-agent collaboration** without direct poi
 
 ## 5. Architecture Mapping to Terraform / Terragrunt Modules
 
-The codebase is partitioned into 7 modular building blocks:
-
 ```mermaid
 flowchart TD
     M1["01_networking\n• VPC & Subnets (Direct VPC Egress)\n• PSA Peering for Cloud SQL\n• Cloud NAT (Static IP MANUAL_ONLY)\n• Cloud Armor WAF Policy"]
@@ -272,7 +270,7 @@ flowchart TD
     M3["03_data_state\n• Cloud SQL PostgreSQL 15\n• Firestore Native Database\n• BigQuery CTT Dataset"]
     M4["04_messaging\n• SOAM Pub/Sub Topics\n• Dead-Letter Queues (DLQ)\n• CMEK-Encrypted Push Subscriptions"]
     M5["05_compute_services\n• Cloud Run v2 (Direct VPC Egress)\n• SOAM Engine (Agent Gateway)\n• Agent 1 & Agent 2 Workers\n• GateKeeper & Guardrails\n• MCP Gateway"]
-    M6["06_ingress_gateway\n• Google Cloud API Gateway\n• PingIdentity JWT OpenAPI Config"]
+    M6["06_ingress_gateway\n• Google Cloud API Gateway\n• Google IAM / OIDC OpenAPI Config"]
     M7["07_observability\n• 365-day Immutable Audit Log Bucket\n• Cloud Logging Sinks\n• Monitoring Alerts & Dashboards"]
 
     M1 --> M3
@@ -295,7 +293,7 @@ flowchart TD
 | **03_data_state** | `modules/03_data_state/` | Private Cloud SQL (Postgres 15 × 2: Registry + SOAM Gateway DB), Firestore Native, BigQuery CTT Telemetry Dataset | Private IP only, KMS disk encryption, PGA transit |
 | **04_messaging** | `modules/04_messaging/` | SOAM Pub/Sub Topics (`agent-1-inbound`, `agent-2-inbound`, `gatekeeper-topic`, `agent-gateway-topic`), DLQ, CMEK Push Subs | OIDC auth, 5-retry DLQ, 10s-600s backoff |
 | **05_compute_services** | `modules/05_compute_services/` | Cloud Run v2 services (9 microservices, Direct VPC Egress, `INGRESS_TRAFFIC_INTERNAL_ONLY`, `min_instance_count ≥ 1`) | SOAM role separation, OIDC Pub/Sub push auth |
-| **06_ingress_gateway** | `modules/06_ingress_gateway/` | Google Cloud API Gateway, API Config, OpenAPI Specs with PingIdentity JWT security definitions | OAuth2/OIDC JWT validation, rate limiting |
+| **06_ingress_gateway** | `modules/06_ingress_gateway/` | Google Cloud API Gateway, API Config, OpenAPI Specs with Google IAM OIDC security definitions | Google IAM / Google OIDC JWT validation, rate limiting |
 | **07_observability** | `modules/07_observability/` | Cloud Storage Audit Bucket (365-day retention, Object Lock), Cloud Logging Sink, Alert Policies | Immutable compliance audit trails, operational metrics |
 
 ---
@@ -309,7 +307,7 @@ flowchart TD
 1. Cloud Armor WAF (Rate Limiting & OWASP Rules)
        │
        ▼
-2. API Gateway (Validates PingIdentity JWT Token)
+2. API Gateway (Validates Google IAM / Google OIDC Token)
        │
        ▼
 3. Agent Gateway — SOAM Engine (Cloud Run)
@@ -342,7 +340,7 @@ flowchart TD
 
 1. **Request Ingestion**:
    * A client sends a request to the **API Gateway** through **Cloud Armor WAF**.
-   * The API Gateway verifies the JWT against **PingIdentity's JWKS** endpoint and routes the request to **Agent Gateway** (SOAM Engine).
+   * The API Gateway verifies the JWT against **Google's JWKS** endpoint (`https://www.googleapis.com/oauth2/v3/certs`) and routes the request to **Agent Coordinator** (SOAM Engine).
 
 2. **SOAM Dispatch Decision**:
    * The **Agent Gateway** classifies the request. Lightweight queries (health, registry lookups) return synchronously.

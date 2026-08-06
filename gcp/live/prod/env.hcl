@@ -14,10 +14,6 @@ locals {
   # Database (8 vCPU, 32 GB RAM Regional High-Availability DB)
   db_tier = "db-custom-8-32768"
 
-  # PingIdentity OIDC Settings
-  pingidentity_issuer_url = "https://auth.enterprise.com"
-  pingidentity_jwks_url   = "https://auth.enterprise.com/.well-known/jwks.json"
-  pingidentity_audience   = "dap-platform-api"
 
   # Microservice Container Images (Production immutable SHA / Release tag)
   container_images = {

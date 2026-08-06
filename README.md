@@ -66,15 +66,15 @@ cloud-run/
 │   │   ├── 03_data_state/            # Cloud SQL ×2 (Registry + SOAM), Firestore, BigQuery CTT
 │   │   ├── 04_messaging/             # SOAM Pub/Sub topics, DLQ (7-day), push subscriptions
 │   │   ├── 05_compute_services/      # Cloud Run v2 (9 services), Direct VPC Egress, min_instance_count ≥ 1
-│   │   ├── 06_ingress_gateway/       # Cloud API Gateway + PingIdentity JWT OpenAPI spec
+│   │   ├── 06_ingress_gateway/       # Cloud API Gateway + Google IAM / Google OIDC JWT OpenAPI spec
 │   │   └── 07_observability/         # 365-day immutable audit log bucket, Logging sinks, Alerts
 │   │
 │   └── docs/
 │       ├── ARCHITECTURE.md           # Full architecture: SOAM, VPC, hops, module map
 │       ├── TERRAGRUNT.md             # Terragrunt guide, DAG, CLI cheat sheet
 │       ├── RUNBOOK.md                # Step-by-step deployment & operational runbook
+│       ├── soam_minimal_architecture_diagram.png
 │       ├── gcp_vpc_network_diagram.png
-│       ├── soam_architecture_diagram.png
 │       ├── gcp_hop_by_hop_diagram.png
 │       └── terragrunt_multienv_cicd_diagram.png
 │
@@ -90,14 +90,14 @@ SOAM is the core orchestration pattern of this platform — an **async-first, ev
 ```text
 Client
   └─→ Cloud Armor WAF
-        └─→ Cloud API Gateway (PingIdentity JWT)
-              └─→ Agent Gateway (SOAM Engine)
+        └─→ Cloud API Gateway (Google IAM / OIDC JWT)
+              └─→ Agent 1 (Coordinator)
                     │
                     ├─ Lightweight? ─────────────────────────→ Sync HTTP response
                     │
-                    └─ Complex task? ──→ [gatekeeper-topic]
+                    └─ Complex task? ──→ [agent-2-inbound-topic]
                                               │
-                                    [GateKeeper + Guardrails]
+                                     [Agent 2 (Worker)]
                                               │ PASS
                                     [agent-1-inbound-topic]
                                               │

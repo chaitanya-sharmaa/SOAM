@@ -59,17 +59,14 @@ module "compute_services" {
   depends_on = [module.data_state, module.messaging]
 }
 
-# 6. Module 06: Edge Ingress API Gateway with PingIdentity JWT Authentication
+# 6. Module 06: Edge Ingress API Gateway with Google IAM / OIDC Authentication
 module "ingress_gateway" {
-  source                     = "../../modules/06_ingress_gateway"
-  project_id                 = var.project_id
-  region                     = var.region
-  environment                = var.environment
-  agent_gateway_backend_url  = module.compute_services.agent_gateway_uri
-  agent_registry_backend_url = module.compute_services.agent_registry_uri
-  pingidentity_issuer_url    = var.pingidentity_issuer_url
-  pingidentity_jwks_url      = var.pingidentity_jwks_url
-  pingidentity_audience      = var.pingidentity_audience
+  source              = "../../modules/06_ingress_gateway"
+  project_id          = var.project_id
+  region              = var.region
+  environment         = var.environment
+  agent_1_backend_url = module.compute_services.agent_1_uri
+  agent_2_backend_url = module.compute_services.agent_2_uri
 
   depends_on = [module.compute_services]
 }

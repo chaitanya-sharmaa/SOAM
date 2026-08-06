@@ -62,7 +62,7 @@ resource "google_bigquery_table" "audit_security_logs" {
   schema = <<EOF
 [
   {"name": "audit_id", "type": "STRING", "mode": "REQUIRED", "description": "Unique audit event ID"},
-  {"name": "user_id", "type": "STRING", "mode": "NULLABLE", "description": "PingIdentity asserted user ID"},
+  {"name": "user_id", "type": "STRING", "mode": "NULLABLE", "description": "Google IAM / OIDC asserted user ID"},
   {"name": "client_ip", "type": "STRING", "mode": "NULLABLE", "description": "Source IP address"},
   {"name": "decision", "type": "STRING", "mode": "REQUIRED", "description": "ALLOWED, BLOCKED, or SANITIZED"},
   {"name": "rule_triggered", "type": "STRING", "mode": "NULLABLE", "description": "Triggered guardrail policy name"},

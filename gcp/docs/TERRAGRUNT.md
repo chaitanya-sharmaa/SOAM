@@ -176,7 +176,7 @@ inputs = {
 | **VPC Connector CIDR** | `10.10.2.0/28` | `10.20.2.0/28` | `10.30.2.0/28` |
 | **Cloud SQL Tier** | `db-custom-2-7680` | `db-custom-4-15360` | `db-custom-8-32768` (HA) |
 | **Image Tags** | `:latest` | `:staging` | `:v1.0.0` (Release SHA) |
-| **PingIdentity Auth** | `dap-platform-api` | `dap-platform-staging` | `dap-platform-api` |
+| **Auth Provider** | `Google IAM / OIDC` | `Google IAM / OIDC` | `Google IAM / OIDC` |
 | **GCS Remote State** | `gs://my-dap-gcp-dev-tfstate-dev` | `gs://my-dap-gcp-staging-tfstate-staging` | `gs://my-dap-gcp-prod-tfstate-prod` |
 
 ---
