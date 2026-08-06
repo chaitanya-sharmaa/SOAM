@@ -1,6 +1,6 @@
 # ==============================================================================
 # Module: 06_ingress_gateway
-# Google Cloud API Gateway with PingIdentity JWT Security & Backend Routing
+# Google Cloud API Gateway with Native Google IAM / OIDC Authentication
 # ==============================================================================
 
 # 1. Service Account for API Gateway
@@ -37,11 +37,8 @@ resource "google_api_gateway_api_config" "dap_api_cfg" {
     document {
       path = "openapi_spec.yaml"
       contents = base64encode(templatefile("${path.module}/openapi_spec.yaml.tpl", {
-        agent_1_backend_url     = var.agent_1_backend_url
-        agent_2_backend_url     = var.agent_2_backend_url
-        pingidentity_issuer_url = var.pingidentity_issuer_url
-        pingidentity_jwks_url   = var.pingidentity_jwks_url
-        pingidentity_audience   = var.pingidentity_audience
+        agent_1_backend_url = var.agent_1_backend_url
+        agent_2_backend_url = var.agent_2_backend_url
       }))
     }
   }

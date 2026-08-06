@@ -13,11 +13,6 @@ locals {
   # Database (Free Tier minimal shared-core instance)
   db_tier = "db-f1-micro"
 
-  # PingIdentity OIDC Settings
-  pingidentity_issuer_url = "https://auth.enterprise.com"
-  pingidentity_jwks_url   = "https://auth.enterprise.com/.well-known/jwks.json"
-  pingidentity_audience   = "dap-platform-api"
-
   # SOAM Agent Container Images
   container_images = {
     "agent-1" = "us-docker.pkg.dev/cloudrun/container/hello"

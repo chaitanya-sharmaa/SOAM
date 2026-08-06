@@ -10,7 +10,7 @@ The **Service-Oriented Agent Mesh (SOAM)** architecture can be proven end-to-end
 
 | Layer | Component | Implementation | Security & Production Hardening |
 |---|---|---|---|
-| **Edge Ingress** | Cloud API Gateway | Open API 2.0 definition routing `/v1/agent1/tasks` and `/v1/agent2/tasks` | PingIdentity OIDC JWT validation, SSL termination, IAM token exchange |
+| **Edge Ingress** | Cloud API Gateway | Open API 2.0 definition routing `/v1/agent1/tasks` and `/v1/agent2/tasks` | Google IAM / Google OIDC JWT validation, SSL termination, IAM token exchange |
 | **Compute** | Agent 1 (Coordinator) | Cloud Run v2 (`dev-dap-agent-1`) | `INGRESS_TRAFFIC_INTERNAL_ONLY`, Direct VPC Egress, scales to zero ($0 idle) |
 | **Compute** | Agent 2 (Worker) | Cloud Run v2 (`dev-dap-agent-2`) | `INGRESS_TRAFFIC_INTERNAL_ONLY`, Direct VPC Egress, scales to zero ($0 idle) |
 | **Messaging** | Pub/Sub Event Backbone | `agent-1-inbound-topic`, `agent-2-inbound-topic`, `dlq-topic` | OIDC-authenticated Push Subscriptions via `sa-dev-ps-invoker`, DLQ after 5 retries |

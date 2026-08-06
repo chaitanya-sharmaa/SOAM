@@ -11,13 +11,12 @@ consumes:
   - "application/json"
 
 securityDefinitions:
-  pingidentity_auth:
+  google_auth:
     type: "oauth2"
     authorizationUrl: ""
     flow: "implicit"
-    x-google-issuer: "${pingidentity_issuer_url}"
-    x-google-jwks_uri: "${pingidentity_jwks_url}"
-    x-google-audiences: "${pingidentity_audience}"
+    x-google-issuer: "https://accounts.google.com"
+    x-google-jwks_uri: "https://www.googleapis.com/oauth2/v3/certs"
 
 paths:
   /v1/agent1/tasks:
@@ -25,7 +24,7 @@ paths:
       summary: "Execute an Agent Task via Agent 1 (Primary Coordinator)"
       operationId: "executeAgent1Task"
       security:
-        - pingidentity_auth: []
+        - google_auth: []
       x-google-backend:
         address: "${agent_1_backend_url}/v1/tasks/process"
         protocol: "h2"
@@ -35,14 +34,14 @@ paths:
           schema:
             type: "object"
         '401':
-          description: "Unauthorized: Invalid or expired PingIdentity JWT token"
+          description: "Unauthorized: Invalid or expired Google IAM OIDC token"
 
   /v1/agent2/tasks:
     post:
       summary: "Execute a Specialized Agent Task via Agent 2"
       operationId: "executeAgent2Task"
       security:
-        - pingidentity_auth: []
+        - google_auth: []
       x-google-backend:
         address: "${agent_2_backend_url}/v1/tasks/process"
         protocol: "h2"
@@ -52,4 +51,4 @@ paths:
           schema:
             type: "object"
         '401':
-          description: "Unauthorized: Invalid or expired PingIdentity JWT token"
+          description: "Unauthorized: Invalid or expired Google IAM OIDC token"

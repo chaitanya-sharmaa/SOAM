@@ -1,5 +1,5 @@
 # ==============================================================================
-# Terragrunt Module: 06_ingress_gateway (SOAM 2-Agent Setup)
+# Terragrunt Module: 06_ingress_gateway (SOAM 2-Agent Setup with Google IAM)
 # ==============================================================================
 
 include "root" {
@@ -25,9 +25,6 @@ dependency "compute" {
 }
 
 inputs = {
-  agent_1_backend_url     = dependency.compute.outputs.agent_1_uri
-  agent_2_backend_url     = dependency.compute.outputs.agent_2_uri
-  pingidentity_issuer_url = local.env_vars.locals.pingidentity_issuer_url
-  pingidentity_jwks_url   = local.env_vars.locals.pingidentity_jwks_url
-  pingidentity_audience   = local.env_vars.locals.pingidentity_audience
+  agent_1_backend_url = dependency.compute.outputs.agent_1_uri
+  agent_2_backend_url = dependency.compute.outputs.agent_2_uri
 }

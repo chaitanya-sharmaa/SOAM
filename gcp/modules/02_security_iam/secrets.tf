@@ -5,7 +5,6 @@
 locals {
   secret_names = [
     "agent-db-password",
-    "pingidentity-client-secret",
     "llm-api-token"
   ]
 }

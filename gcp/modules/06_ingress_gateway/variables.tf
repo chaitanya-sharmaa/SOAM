@@ -24,21 +24,3 @@ variable "agent_2_backend_url" {
   description = "Cloud Run backend URI for Agent 2"
   type        = string
 }
-
-variable "pingidentity_issuer_url" {
-  description = "PingIdentity OIDC token issuer URL"
-  type        = string
-  default     = "https://auth.enterprise.com"
-}
-
-variable "pingidentity_jwks_url" {
-  description = "PingIdentity JWKS public key endpoint"
-  type        = string
-  default     = "https://auth.enterprise.com/.well-known/jwks.json"
-}
-
-variable "pingidentity_audience" {
-  description = "Expected audience claim in the PingIdentity JWT"
-  type        = string
-  default     = "dap-platform-api"
-}
