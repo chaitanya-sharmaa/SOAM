@@ -64,7 +64,7 @@ SOAM/
 │   │   ├── 06_ingress_gateway/
 │   │   └── 07_observability/
 │   │
-│   └── live/                         # ⚡ Terragrunt Multi-Environment Live Deployments
+│   └── environments/                 # ⚡ Terragrunt Multi-Environment Deployments
 │       ├── root.hcl                  # 🌐 Global Root: Auto GCS Remote State & Provider generation
 │       │
 │       ├── dev/                      # 🧪 Dev Environment (dev-dap)
@@ -184,7 +184,7 @@ inputs = {
 
 ### Deploy / Plan Entire Environment
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 
 # 1. Print and inspect the dependency tree
 terragrunt dag graph
@@ -198,7 +198,7 @@ terragrunt run --all apply
 
 ### Iterate on a Single Module (Reduced Blast Radius)
 ```bash
-cd infra/live/dev/05_compute_services
+cd infra/environments/dev/05_compute_services
 
 terragrunt plan
 terragrunt apply
@@ -206,7 +206,7 @@ terragrunt apply
 
 ### Destroy / Teardown
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt run --all destroy
 ```
 
@@ -221,7 +221,7 @@ The pipeline at `.github/workflows/terragrunt-gcp.yml` implements automated GitO
    - PR to **`staging`** ➔ Plans only **`staging`**
    - PR to **`main`** ➔ Plans only **`prod`**
 2. **Continuous Deployment (Auto-Apply)**:
-   - Merge to **`develop`** ➔ Applies `infra/live/dev`
-   - Merge to **`staging`** ➔ Applies `infra/live/staging`
-   - Merge to **`main`** ➔ Applies `infra/live/prod` (requires manual review)
+   - Merge to **`develop`** ➔ Applies `infra/environments/dev`
+   - Merge to **`staging`** ➔ Applies `infra/environments/staging`
+   - Merge to **`main`** ➔ Applies `infra/environments/prod` (requires manual review)
 3. **Manual Dispatch**: Select environment and action (`plan`, `apply`, `destroy`) directly from GitHub Actions UI.

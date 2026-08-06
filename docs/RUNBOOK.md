@@ -94,9 +94,9 @@ In your GitHub repository:
 
 ## ⚙️ Step 3: Configure Environment Variables (`env.hcl`)
 
-Update `infra/live/<env>/env.hcl` for each environment (`dev`, `staging`, `prod`) to set project IDs, network CIDRs, and database sizing.
+Update `infra/environments/<env>/env.hcl` for each environment (`dev`, `staging`, `prod`) to set project IDs, network CIDRs, and database sizing.
 
-### Example: `infra/live/dev/env.hcl`
+### Example: `infra/environments/dev/env.hcl`
 ```hcl
 locals {
   environment = "dev"
@@ -139,7 +139,7 @@ Dependency Execution Hierarchy:
 
 ### 1. Inspect Dependency Graph
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 
 # Visualize the module DAG
 terragrunt dag graph
@@ -148,14 +148,14 @@ terragrunt dag graph
 ### 2. Full Environment Plan
 Run a plan across all 7 modules in strict topological dependency order:
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt run --all plan
 ```
 
 ### 3. Full Environment Apply
 Deploy the complete 7-module platform:
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt run --all apply --non-interactive
 ```
 
@@ -163,7 +163,7 @@ terragrunt run --all apply --non-interactive
 When working on a specific layer, navigate directly to that unit:
 ```bash
 # Example: Apply changes only to compute services
-cd infra/live/dev/05_compute_services
+cd infra/environments/dev/05_compute_services
 terragrunt plan
 terragrunt apply
 ```
@@ -171,7 +171,7 @@ terragrunt apply
 ### 5. Tear Down / Destroy Environment
 To safely destroy all resources in reverse topological dependency order:
 ```bash
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt run --all destroy --non-interactive
 ```
 
@@ -289,13 +289,13 @@ gcloud compute routers nats list --router=dev-dap-router --region="${REGION}" --
 * **Root Cause**: High Cloud Run concurrency or scale-out exhausts available IPs in `snet-private-workload`.
 * **Resolution**: Ensure subnet sizes are sized appropriately:
   * `dev` / `staging`: `/24` (254 IPs)
-  * `prod`: `/22` (1022 IPs) configured in `infra/live/prod/env.hcl`.
+  * `prod`: `/22` (1022 IPs) configured in `infra/environments/prod/env.hcl`.
 
 ### 5. Stale Terragrunt Cache
 * **Root Cause**: Corrupted `.terragrunt-cache` or changed provider/module sources.
 * **Resolution**: Clear all local cache folders:
   ```bash
-  find infra/live -type d -name ".terragrunt-cache" -prune -exec rm -rf {} +
+  find infra/environments -type d -name ".terragrunt-cache" -prune -exec rm -rf {} +
   ```
 
 ---

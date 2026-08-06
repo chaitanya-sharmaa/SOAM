@@ -60,7 +60,7 @@ SOAM/
 ├── infra/                            # Infrastructure as Code (Terraform + Terragrunt)
 │   ├── bootstrap/                    # One-time: WIF setup & GCS remote state bucket
 │   │
-│   ├── live/                         # Terragrunt live environments
+│   ├── environments/                 # Terragrunt environment configurations
 │   │   ├── root.hcl                  # Global: GCS remote state, provider, WIF
 │   │   ├── dev/                      # 🧪 Dev  — project: dev-dap    | subnet: 10.10.1.0/24
 │   │   ├── staging/                  # 🚀 Staging — project: staging-dap | subnet: 10.20.1.0/24
@@ -135,7 +135,7 @@ Client
 
 ```bash
 # Plan the full dev environment (topological order, all 7 modules)
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt run --all plan
 
 # Apply dev end-to-end
@@ -146,7 +146,7 @@ cd scripts
 ./live_platform_deep_test.sh
 
 # View module dependency graph
-cd infra/live/dev
+cd infra/environments/dev
 terragrunt dag graph
 ```
 
