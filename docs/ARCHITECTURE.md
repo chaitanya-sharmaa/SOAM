@@ -290,13 +290,13 @@ flowchart TD
 
 | Module | Code Location | Resources Provisioned | Security Controls |
 | :--- | :--- | :--- | :--- |
-| **01_networking** | `modules/01_networking/` | VPC, Private Subnet (Direct VPC Egress), PSA Peering, Cloud Router, Cloud NAT (static `MANUAL_ONLY` IP), Cloud Armor WAF | Edge DDoS/WAF protection, no connector VMs, private RFC 1918 addressing |
-| **02_security_iam** | `modules/02_security_iam/` | `sa-dev-agent-1`, `sa-dev-agent-2`, `sa-dev-ps-invoker`, `sa-dev-api-gateway`; Secret Manager secrets for DB password and LLM API token | Least-privilege IAM per service; no cross-agent SA access |
-| **03_data_state** | `modules/03_data_state/` | Cloud SQL PostgreSQL 15, Firestore Native `(default)`, BigQuery CTT dataset | Private IP only, PSA Peering, PGA transit, zero public exposure |
-| **04_messaging** | `modules/04_messaging/` | `agent-1-inbound-topic`, `agent-2-inbound-topic`, `dap-dlq-topic`, OIDC push subscriptions | OIDC auth via `sa-dev-ps-invoker`, 5-retry DLQ, 10s–600s exponential backoff |
-| **05_compute_services** | `modules/05_compute_services/` | Agent 1 & Agent 2 Cloud Run v2 services, Direct VPC Egress on both, `INGRESS_TRAFFIC_INTERNAL_ONLY`, Pub/Sub push sub wiring | OIDC Pub/Sub push auth, internal-only ingress enforced |
-| **06_ingress_gateway** | `modules/06_ingress_gateway/` | Google Cloud API Gateway, OpenAPI spec with Google IAM OIDC `x-google-issuer`/`x-google-jwks_uri`/`x-google-audiences` | Google IAM / OIDC JWT validation; `sa-dev-api-gateway` with `roles/run.invoker` |
-| **07_observability** | `modules/07_observability/` | Cloud Storage Audit Bucket (365-day retention, Object Lock), Cloud Logging Sink, Alert Policies | Immutable compliance audit trails, operational alerting |
+| **01_networking** | `infra/modules/01_networking/` | VPC, Private Subnet (Direct VPC Egress), PSA Peering, Cloud Router, Cloud NAT (static `MANUAL_ONLY` IP), Cloud Armor WAF | Edge DDoS/WAF protection, no connector VMs, private RFC 1918 addressing |
+| **02_security_iam** | `infra/modules/02_security_iam/` | `sa-dev-agent-1`, `sa-dev-agent-2`, `sa-dev-ps-invoker`, `sa-dev-api-gateway`; Secret Manager secrets for DB password and LLM API token | Least-privilege IAM per service; no cross-agent SA access |
+| **03_data_state** | `infra/modules/03_data_state/` | Cloud SQL PostgreSQL 15, Firestore Native `(default)`, BigQuery CTT dataset | Private IP only, PSA Peering, PGA transit, zero public exposure |
+| **04_messaging** | `infra/modules/04_messaging/` | `agent-1-inbound-topic`, `agent-2-inbound-topic`, `dap-dlq-topic`, OIDC push subscriptions | OIDC auth via `sa-dev-ps-invoker`, 5-retry DLQ, 10s–600s exponential backoff |
+| **05_compute_services** | `infra/modules/05_compute_services/` | Agent 1 & Agent 2 Cloud Run v2 services, Direct VPC Egress on both, `INGRESS_TRAFFIC_INTERNAL_ONLY`, Pub/Sub push sub wiring | OIDC Pub/Sub push auth, internal-only ingress enforced |
+| **06_ingress_gateway** | `infra/modules/06_ingress_gateway/` | Google Cloud API Gateway, OpenAPI spec with Google IAM OIDC `x-google-issuer`/`x-google-jwks_uri`/`x-google-audiences` | Google IAM / OIDC JWT validation; `sa-dev-api-gateway` with `roles/run.invoker` |
+| **07_observability** | `infra/modules/07_observability/` | Cloud Storage Audit Bucket (365-day retention, Object Lock), Cloud Logging Sink, Alert Policies | Immutable compliance audit trails, operational alerting |
 
 ---
 

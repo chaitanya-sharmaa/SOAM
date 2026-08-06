@@ -8,19 +8,19 @@
 
 ### VPC Network Topology & Connectivity
 
-![GCP DAP — VPC Network Topology & Connectivity](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_vpc_network_diagram.png)
+![GCP DAP — VPC Network Topology & Connectivity](docs/gcp_vpc_network_diagram.png)
 
 ### SOAM — Service Oriented Agent Messaging
 
-![SOAM — Service Oriented Agent Messaging](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/soam_architecture_diagram.png)
+![SOAM — Service Oriented Agent Messaging](docs/soam_architecture_diagram.png)
 
 ### Hop-by-Hop Packet & Connection Lifecycle
 
-![GCP DAP — Hop-by-Hop Packet Lifecycle](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/gcp_hop_by_hop_diagram.png)
+![GCP DAP — Hop-by-Hop Packet Lifecycle](docs/gcp_hop_by_hop_diagram.png)
 
 ### Terragrunt Multi-Environment IaC & GitOps CI/CD
 
-![GCP DAP — Terragrunt CI/CD Pipeline](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![GCP DAP — Terragrunt CI/CD Pipeline](docs/terragrunt_multienv_cicd_diagram.png)
 
 ---
 

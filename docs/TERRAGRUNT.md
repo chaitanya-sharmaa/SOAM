@@ -4,9 +4,9 @@ This document provides a comprehensive technical guide to how **Terragrunt** orc
 
 ---
 
-## 🎨 Multi-Environment Architecture & CI/CD Diagram
+### 🎨 Multi-Environment Architecture & CI/CD Diagram
 
-![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](terragrunt_multienv_cicd_diagram.png)
 
 ---
 
@@ -20,29 +20,24 @@ flowchart TD
         RootHCL["• Auto-generates GCS Remote State Backend\n• Auto-generates Google Provider blocks\n• Defines default GCP versions"]
     end
 
-    subgraph Tier2["Tier 2: Environment Deltas (env.hcl)"]
-        DevEnv["dev/env.hcl\n• Project: dev-project\n• Subnet: 10.10.1.0/24\n• DB: 2 vCPU"]
-        StgEnv["staging/env.hcl\n• Project: staging-project\n• Subnet: 10.20.1.0/24\n• DB: 4 vCPU"]
-        PrdEnv["prod/env.hcl\n• Project: prod-project\n• Subnet: 10.30.1.0/24\n• DB: 8 vCPU (HA)"]
+    subgraph Tier2["Tier 2: Environment Config (env.hcl)"]
+        EnvDev["dev/env.hcl\n• dev-dap\n• 10.10.1.0/24"]
+        EnvStaging["staging/env.hcl\n• staging-dap\n• 10.20.1.0/24"]
+        EnvProd["prod/env.hcl\n• prod-dap\n• 10.30.1.0/22 (HA)"]
     end
 
     subgraph Tier3["Tier 3: Module Wrappers (terragrunt.hcl)"]
-        Modules["01_networking\n02_security_iam\n03_data_state\n04_messaging\n05_compute_services\n06_ingress_gateway\n07_observability"]
+        M1["01_networking"]
+        M2["02_security_iam"]
+        M3["03_data_state"]
+        M4["04_messaging"]
+        M5["05_compute_services"]
+        M6["06_ingress_gateway"]
+        M7["07_observability"]
     end
 
-    subgraph SourceCode["Terraform Source Modules (modules/)"]
-        TFSource["Reusable Terraform Code (*.tf files)"]
-    end
-
-    RootHCL --> DevEnv
-    RootHCL --> StgEnv
-    RootHCL --> PrdEnv
-
-    DevEnv --> Modules
-    StgEnv --> Modules
-    PrdEnv --> Modules
-
-    Modules --> TFSource
+    Tier1 --> Tier2
+    Tier2 --> Tier3
 ```
 
 ---
@@ -50,12 +45,16 @@ flowchart TD
 ## 2. Directory Structure
 
 ```text
-cloud-run/
+SOAM/
 ├── .github/
 │   └── workflows/
 │       └── terragrunt-gcp.yml        # Multi-environment CI/CD workflow (WIF Keyless Auth)
 │
-├── gcp/
+├── apps/                             # AI Agent Microservices Source Code
+│   ├── coordinator/                  # Agent 1 (SOAM Coordinator & Reasoning Engine)
+│   └── worker/                       # Agent 2 (SOAM Specialist Worker & Diagnostics)
+│
+├── infra/
 │   ├── modules/                      # 📦 Reusable Terraform Modules (Source of Truth)
 │   │   ├── 01_networking/
 │   │   ├── 02_security_iam/
@@ -68,7 +67,7 @@ cloud-run/
 │   └── live/                         # ⚡ Terragrunt Multi-Environment Live Deployments
 │       ├── root.hcl                  # 🌐 Global Root: Auto GCS Remote State & Provider generation
 │       │
-│       ├── dev/                      # 🧪 Dev Environment (my-dap-gcp-dev)
+│       ├── dev/                      # 🧪 Dev Environment (dev-dap)
 │       │   ├── env.hcl
 │       │   ├── 01_networking/terragrunt.hcl
 │       │   ├── 02_security_iam/terragrunt.hcl
@@ -78,11 +77,11 @@ cloud-run/
 │       │   ├── 06_ingress_gateway/terragrunt.hcl
 │       │   └── 07_observability/terragrunt.hcl
 │       │
-│       ├── staging/                  # 🚀 Staging Environment (my-dap-gcp-staging)
+│       ├── staging/                  # 🚀 Staging Environment (staging-dap)
 │       │   ├── env.hcl
 │       │   └── ... (01 through 07)
 │       │
-│       └── prod/                     # 🛡️ Production Environment (my-dap-gcp-prod)
+│       └── prod/                     # 🛡️ Production Environment (prod-dap)
 │           ├── env.hcl
 │           └── ... (01 through 07)
 ```

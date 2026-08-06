@@ -6,7 +6,7 @@ This runbook is the comprehensive, step-by-step operational guide for provisioni
 
 ## 🎨 Architecture & CI/CD Flow
 
-![Terragrunt Multi-Environment CI/CD Orchestration](https://raw.githubusercontent.com/chaitanya-sharmaa/SOAM/grunt/gcp/docs/terragrunt_multienv_cicd_diagram.png)
+![Terragrunt Multi-Environment CI/CD Orchestration](terragrunt_multienv_cicd_diagram.png)
 
 ---
 
