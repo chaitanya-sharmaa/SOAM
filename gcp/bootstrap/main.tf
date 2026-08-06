@@ -29,9 +29,10 @@ resource "google_project_service" "required_services" {
   disable_on_destroy = false
 }
 
-# 2. Remote State Storage Bucket (with Object Versioning)
-resource "google_storage_bucket" "tf_state_bucket" {
-  name                        = "${var.project_id}-dap-tfstate"
+# 2. Remote State Storage Buckets (with Object Versioning for dev, staging, prod)
+resource "google_storage_bucket" "tf_state_buckets" {
+  for_each                    = toset(["dev", "staging", "prod"])
+  name                        = "${var.project_id}-tfstate-${each.key}"
   project                     = var.project_id
   location                    = var.region
   force_destroy               = false

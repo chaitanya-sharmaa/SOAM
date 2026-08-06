@@ -1,6 +1,6 @@
-output "gcs_state_bucket_name" {
-  description = "Name of the Google Cloud Storage bucket for Terraform remote state."
-  value       = google_storage_bucket.tf_state_bucket.name
+output "gcs_state_bucket_names" {
+  description = "Names of the Google Cloud Storage buckets for Terraform/Terragrunt remote state per environment."
+  value       = { for k, b in google_storage_bucket.tf_state_buckets : k => b.name }
 }
 
 output "terraform_service_account_email" {
