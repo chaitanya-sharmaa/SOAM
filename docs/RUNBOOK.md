@@ -279,7 +279,7 @@ gcloud compute routers nats list --router=dev-dap-router --region="${REGION}" --
 
 ### 2. `Error: googleapi: Error 403: Caller does not have required permission`
 * **Root Cause**: Your local gcloud identity or the Terraform CI/CD Service Account is missing one of the necessary IAM roles.
-* **Resolution**: Verify that the SA has the roles listed in `gcp/bootstrap/main.tf` (`roles/compute.networkAdmin`, `roles/run.admin`, `roles/cloudsql.admin`, etc.).
+* **Resolution**: Verify that the SA has the roles listed in `infra/bootstrap/main.tf` (`roles/compute.networkAdmin`, `roles/run.admin`, `roles/cloudsql.admin`, etc.).
 
 ### 3. `Error: Private Services Access (PSA) Peering already exists or overlaps`
 * **Root Cause**: The PSA peering range (`10.10.16.0/20`) conflicts with an existing peering connection.
