@@ -15,3 +15,10 @@ resource "google_firestore_database" "agent_state_db" {
   app_engine_integration_mode = "DISABLED"
   delete_protection_state     = "DELETE_PROTECTION_DISABLED"
 }
+
+# Declarative import block ensures Terraform automatically adopts the project singleton (default) database
+# on fresh applies or post-destroy runs without throwing HTTP 409 Conflict.
+import {
+  id = "(default)"
+  to = google_firestore_database.agent_state_db
+}
